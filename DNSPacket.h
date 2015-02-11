@@ -27,7 +27,7 @@ public:
     void SetRawName(const std::string & rawName) { this->rawName = rawName; }
     void SetType(const short recordType) { this->recordType = recordType; }
     void SetClass(const short recordClass) { this->recordClass = recordClass; }
-
+    
     void EncodeName(void);
     void EncodeName(const std::string &);
 
