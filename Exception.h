@@ -26,7 +26,7 @@ private:
 
 class GeneralException : public Exception {
 public:
-    GeneralException(std::string message) : Exception() {
+    GeneralException(const std::string & message) : Exception() {
         this->message = message;
     }
 
@@ -47,7 +47,7 @@ private:
 
 class FileIOException : public Exception {
 public:
-    FileIOException(std::string filename, std::string message) : Exception() {
+    FileIOException(const std::string & filename, const std::string & message) : Exception() {
         this->filename = filename;
         this->message = message;
     }
@@ -77,12 +77,12 @@ private:
 
 class ParseException : public Exception {
 public:
-    ParseException(std::string message) : Exception() {
+    ParseException(const std::string & message) : Exception() {
         this->filename.clear();
         this->message = message;
     }
 
-    ParseException(std::string filename, std::string message) : Exception() {
+    ParseException(const std::string & filename, const std::string & message) : Exception() {
         this->filename = filename;
         this->message = message;
     }
@@ -108,14 +108,14 @@ private:
 
 class OutOfRangeException : public Exception {
 public:
-    OutOfRangeException(int bottom, int top, int val, std::string message) : Exception() {
+    OutOfRangeException(int bottom, int top, int val, const std::string & message) : Exception() {
         this->bottom = bottom;
         this->top = top;
         this->val = val;
         this->message = message;
     }
 
-    OutOfRangeException(int top, int val, std::string message) : Exception() {
+    OutOfRangeException(int top, int val, const std::string & message) : Exception() {
         this->bottom = 0;
         this->top = top;
         this->val = val;

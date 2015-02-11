@@ -4,71 +4,104 @@
 #include <string>
 #include <cstdlib>
 
-const char RD_FLAG = (1 << 8);
-const short CLASS_IN = 1;
-const short TYPE_A = 1;
+#include "StringUtilities.h"
 
-struct QuestionSection_t{
-    std::string name;
-    std::string rawName;
-    short q_type;
-    short q_class;
+const char RD_FLAG = (char)(1 << 8);        //RD (Recursion desired) bit set
+const short CLASS_IN = 1;                   //IN = Internet class
+const short TYPE_A = 1;                     //A = IPv4 Addresses
+
+class Record {
+public:
+    Record(void) {
+        name.clear();
+        rawName.clear();
+        recordType = TYPE_A;
+        recordClass = CLASS_IN;
+    }
 
     std::string & GetRawName(void) { return rawName; }
     std::string & GetName(void) { return name; }
-    short GetType(void) { return q_type; }
-    short GetClass(void) { return q_class; }
+    short GetType(void) { return recordType; }
+    short GetClass(void) { return recordClass; }
 
     void SetRawName(const std::string & rawName) { this->rawName = rawName; }
-    void SetType(const short q_type) { this->q_type = q_type; }
-    void SetClass(const short q_class) { this->q_class = q_class; }
+    void SetType(const short recordType) { this->recordType = recordType; }
+    void SetClass(const short recordClass) { this->recordClass = recordClass; }
 
-    void CreateName(void) {
-        
+    void EncodeName(void);
+    void EncodeName(const std::string &);
+
+    void Print(void);
+
+protected:
+    std::string name;
+    std::string rawName;
+    short recordType;
+    short recordClass;
+};
+
+class ExtendedRecord : public Record {
+public:
+    ExtendedRecord(void) {
+        name.clear();
+        rawName.clear();
+        recordType = TYPE_A;
+        recordClass = CLASS_IN;
+        ttl = 0;
+        rdlength = 0;
+        rdata.clear();
     }
 
-    void CreateName(const std::string & rawName) {
-        this->rawName = rawName;
-        this->CreateName();
-    }
+    long GetTTL(void) { return ttl; }
+    short GetRecordDataLength(void) { return rdlength; }
+    std::string & GetRecordData(void) { return rdata; }
 
-} QuestionSection_t;
+    void SetTTL(const long ttl) { this->ttl = ttl; }
+    void SetRecordDataLength(const short rdlength) { this->rdlength = rdlength; }
+    void SetRecordData(const std::string & rdata) { this->rdata = rdata; }
+
+    void Print(void);
+
+protected:
+    long ttl;
+    short rdlength;
+    std::string rdata;
+};
+
+class QuestionSection : public Record {};
+class AnswerSection : public ExtendedRecord {};
+class NameServerSection : public ExtendedRecord {};
+class AdditionalRecordSection : public ExtendedRecord {};
 
 class DNSPacket {
-
 public:
-    DNSPacket(const std::string & name) {
-        srand(time(NULL));
+    DNSPacket(const std::string &);
+    void Print(void);
+    char * GetData(void);
 
-        //Create a random ID
-        id = (short)rand();
-
-        //Set the flags (enable RD)
-        flags = RD_FLAG;
-
-        //Set Counts
-        qcount = 1;
-        ancount = 0;
-        nscount = 0;
-        arcount = 0;
-
-        //Build the question section
-        question.SetRawName(name);
-        question.SetType(TYPE_A);
-        question.SetClass(CLASS_IN);
-
-        //Build the length-encoded name
-        question.CreateName();
-    }
+    //Getters...
+    short GetID(void) { return id; }
+    short GetFlags(void) { return flags; }
+    short GetQuestionCount(void) { return qdcount; }
+    short GetAnswerCount(void) { return ancount; }
+    short GetNameServerCount(void) { return nscount; }
+    short GetAdditionalRecordCount(void) { return arcount; }
+    QuestionSection & GetQuestionSection(void) { return question; }
+    AnswerSection & GetAnswerSection(void) { return answer; }
+    NameServerSection & GetNameServerSection(void) { return nameServer; }
+    AdditionalRecordSection & GetAdditionalRecordSection(void) { return additionalRecord; }
 
 private:
     short id;
     short flags;
-    short qcount;
+    short qdcount;
     short ancount;
     short nscount;
     short arcount;
-    QuestionSection_t question;
+    QuestionSection question;
+    AnswerSection answer;
+    NameServerSection nameServer;
+    AdditionalRecordSection additionalRecord;
 };
 
 #endif//DNSPACKET_H
