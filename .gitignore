@@ -1,0 +1,11 @@
+#Ignore temp files
+*~
+
+#CLANG Residuals
+*.dSYM
+
+#Actual binary
+DNSClient
+
+#Object files
+*.o
