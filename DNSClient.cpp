@@ -3,6 +3,9 @@
 #include <netinet/in.h> //Internet-specific features of sockets
 #include <arpa/inet.h>
 
+#include "DNSPacket.h"
+#include "Exception.h"
+
 int main() {
     //Initialization
 
@@ -57,6 +60,7 @@ int main() {
     }
 
     fd_set sockets;
+    
     // Clear the fd set
     FD_ZERO(&sockets);
 
@@ -75,6 +79,9 @@ int main() {
         ntrim(domain);
 
         //Create a DNS packet
+        std::string name(domain);
+        DNSPacket packet(name);
+        packet.Print();
 
         //Send packet to server
 
@@ -82,8 +89,6 @@ int main() {
 
         //Print response
     }
-
-
 
     //Close
 }
