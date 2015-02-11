@@ -24,7 +24,7 @@ struct QuestionSection_t{
     void SetClass(const short q_class) { this->q_class = q_class; }
 
     void CreateName(void) {
-        
+
     }
 
     void CreateName(const std::string & rawName) {
