@@ -17,7 +17,10 @@ public:
         rawName.clear();
         recordType = TYPE_A;
         recordClass = CLASS_IN;
+        data = NULL;
     }
+
+    ~Record(void) { free(data); }
 
     std::string & GetRawName(void) { return rawName; }
     std::string & GetName(void) { return name; }
@@ -27,17 +30,22 @@ public:
     void SetRawName(const std::string & rawName) { this->rawName = rawName; }
     void SetType(const short recordType) { this->recordType = recordType; }
     void SetClass(const short recordClass) { this->recordClass = recordClass; }
-    
+
     void EncodeName(void);
     void EncodeName(const std::string &);
 
     void Print(void);
 
+    size_t Size(void);
+
+    char * GetData(void);
+
 protected:
-    std::string name;
-    std::string rawName;
-    short recordType;
-    short recordClass;
+    std::string name;       //3www6google3com0
+    std::string rawName;    //www.google.com
+    short recordType;       //TYPE_A (IPv4)
+    short recordClass;      //CLASS_IN (Internet)
+    char * data;            //Serialized byte data
 };
 
 class ExtendedRecord : public Record {
@@ -62,6 +70,10 @@ public:
 
     void Print(void);
 
+    size_t Size(void);
+
+    char * GetData(void);
+
 protected:
     long ttl;
     short rdlength;
@@ -76,6 +88,7 @@ class AdditionalRecordSection : public ExtendedRecord {};
 class DNSPacket {
 public:
     DNSPacket(const std::string &);
+    ~DNSPacket(void) { free(data); }
     void Print(void);
     char * GetData(void);
 
@@ -102,6 +115,8 @@ private:
     AnswerSection answer;
     NameServerSection nameServer;
     AdditionalRecordSection additionalRecord;
+
+    char * data;
 };
 
 #endif//DNSPACKET_H
