@@ -27,17 +27,17 @@ public:
     void SetRawName(const std::string & rawName) { this->rawName = rawName; }
     void SetType(const short recordType) { this->recordType = recordType; }
     void SetClass(const short recordClass) { this->recordClass = recordClass; }
-    
+
     void EncodeName(void);
     void EncodeName(const std::string &);
 
     void Print(void);
 
 protected:
-    std::string name;
-    std::string rawName;
-    short recordType;
-    short recordClass;
+    std::string name;       //3www6google3com0
+    std::string rawName;    //www.google.com
+    short recordType;       //TYPE_A (IPv4)
+    short recordClass;      //CLASS_IN (Internet)
 };
 
 class ExtendedRecord : public Record {
