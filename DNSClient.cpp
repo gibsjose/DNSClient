@@ -110,7 +110,7 @@ int main(int argc, char * argv[]) {
         //Send packet to server
         char *packetData = packet.GetData();
         printf("%s\n", packetData);
-        if(-1 == sendto(sockfd, packetData, sizeof(packetData), 0, (struct sockaddr *)&serveraddr, sizeof(serveraddr))) {
+        if(-1 == sendto(sockfd, packetData, packet.Size(), 0, (struct sockaddr *)&serveraddr, sizeof(serveraddr))) {
             perror(strerror(errno));
             return 0;
         }

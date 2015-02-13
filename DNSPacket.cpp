@@ -208,12 +208,12 @@ char * DNSPacket::GetData(void) {
     data = (char *)malloc(dataLen);
     char * p = data;
 
-    short id = htons(this->id);
-    short flags = htons(this->flags);
-    short qdcount = htons(this->qdcount);
-    short ancount = htons(this->ancount);
-    short nscount = htons(this->nscount);
-    short arcount = htons(this->arcount);
+    short id = __bswap_16(this->id);
+    short flags = __bswap_16(this->flags);
+    short qdcount = __bswap_16(this->qdcount);
+    short ancount = __bswap_16(this->ancount);
+    short nscount = __bswap_16(this->nscount);
+    short arcount = __bswap_16(this->arcount);
 
     memcpy(p, &(id), sizeof(this->id));
     p += sizeof(this->id);

@@ -5,6 +5,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <arpa/inet.h>
+#include <byteswap.h>
 
 #include "StringUtilities.h"
 
