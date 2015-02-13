@@ -4,6 +4,7 @@
 #include <string>
 #include <cstring>
 #include <cstdlib>
+#include <arpa/inet.h>
 
 #include "StringUtilities.h"
 
