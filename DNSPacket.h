@@ -91,7 +91,8 @@ public:
     ~DNSPacket(void) { free(data); }
     void Print(void);
     char * GetData(void);
-
+    size_t Size(void);
+    
     //Getters...
     short GetID(void) { return id; }
     short GetFlags(void) { return flags; }

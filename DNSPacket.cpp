@@ -39,7 +39,7 @@ size_t Record::Size(void) {
 char * Record::GetData(void) {
     //Malloc the required amount of space
     size_t dataLen = this->Size();
-    data = malloc(dataLen);
+    data = (char *)malloc(dataLen);
     char * p = data;
 
     memcpy(p, this->name.c_str(), this->name.size());
@@ -79,7 +79,7 @@ size_t ExtendedRecord::Size(void) {
 char * ExtendedRecord::GetData(void) {
     //Malloc the required amount of space
     size_t dataLen = this->Size();
-    data = malloc(dataLen);
+    data = (char *)malloc(dataLen);
     char * p = data;
 
     memcpy(p, this->name.c_str(), this->name.size());
@@ -163,13 +163,15 @@ size_t DNSPacket::Size(void) {
     size += answer.Size();
     size += nameServer.Size();
     size += additionalRecord.Size();
+
+    return size;
 }
 
 char * DNSPacket::GetData(void) {
 
     //Malloc the required amount of space
     size_t dataLen = this->Size();
-    data = malloc(dataLen);
+    data = (char *)malloc(dataLen);
     char * p = data;
 
     memcpy(p, &(this->id), sizeof(this->id));
@@ -199,7 +201,7 @@ char * DNSPacket::GetData(void) {
     memcpy(p, this->nameServer.GetData(), this->nameServer.Size());
     p += this->nameServer.Size();
 
-    memcpy(p, this->additionalRecords.GetData(), this->additionalRecords.Size());
+    memcpy(p, this->additionalRecord.GetData(), this->additionalRecord.Size());
 
     return data;
 }
