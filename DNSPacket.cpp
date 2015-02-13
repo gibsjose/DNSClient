@@ -171,11 +171,14 @@ char * DNSPacket::GetData(void) {
 
     //Malloc the required amount of space
     size_t dataLen = this->Size();
+    std::cout << "dataLen " << dataLen << std::endl;
+
     data = (char *)malloc(dataLen);
     char * p = data;
 
     memcpy(p, &(this->id), sizeof(this->id));
     p += sizeof(this->id);
+
 
     memcpy(p, &(this->flags), sizeof(this->flags));
     p += sizeof(this->flags);

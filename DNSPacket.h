@@ -2,6 +2,7 @@
 #define DNSPACKET_H
 
 #include <string>
+#include <cstring>
 #include <cstdlib>
 
 #include "StringUtilities.h"
@@ -92,7 +93,7 @@ public:
     void Print(void);
     char * GetData(void);
     size_t Size(void);
-    
+
     //Getters...
     short GetID(void) { return id; }
     short GetFlags(void) { return flags; }

@@ -2,10 +2,17 @@
 #include <sys/socket.h> //Socket features
 #include <netinet/in.h> //Internet-specific features of sockets
 #include <arpa/inet.h>
+#include <unistd.h>
+#include <string.h>
 
 #include "DNSPacket.h"
 #include "ConfigManager.hpp"
 #include "Exception.h"
+
+
+#define MAX_INPUT_SIZE 512
+
+void ntrim(char *str);
 
 int main(int argc, char * argv[]) {
     //Initialization
@@ -34,11 +41,6 @@ int main(int argc, char * argv[]) {
     std::cout << "IP: " << lConfigManager.getResolverIPString() << std::endl;
     std::cout << "Port: " << lConfigManager.getResolverPort() << std::endl;
 
-    //Connect to server
-    char port_str[16];
-    char address[64];   //Address of DNS resolver, get from config class
-    char domain[64];    //Domain used for request
-    unsigned int port;  //Port of DNS resolver, get from config class
 
     //Create a socket:
     //socket() system call creates a socket, returning a socket descriptor
@@ -65,54 +67,61 @@ int main(int argc, char * argv[]) {
         return -1;
     }
 
-    std::cout << "===========================================\n";
-    std::cout << "Connecting to " << address << ":" << port <<std::endl;
-    std::cout << "===========================================\n" << std::endl;
+    // std::cout << "===========================================\n";
+    // std::cout << "Connecting to " << address << ":" << port <<std::endl;
+    // std::cout << "===========================================\n" << std::endl;
 
     //inet_addr() converts a string-address into the proper type
     //Specify the address for the socket
     //Create the socket address structure and populate it's fields
     struct sockaddr_in serveraddr;
     serveraddr.sin_family = AF_INET;                            //Specify the family again (AF_INET = internet family)
-    serveraddr.sin_port = htons(port);                          //Specify the port on which to send data (16-bit) (# < 1024 is off-limits)
-    serveraddr.sin_addr.s_addr = inet_addr(address);        //Specify the IP address of the server with which to communicate
+    serveraddr.sin_port = lConfigManager.getResolverPort();                        //Specify the port on which to send data (16-bit) (# < 1024 is off-limits)
+    serveraddr.sin_addr.s_addr = lConfigManager.getResolverIPInetAddr();        //Specify the IP address of the server with which to communicate
 
     //"Connect" to the server by sending it 'STX' and expect an 'ACK' back.
-    char lSTX = STX_CHAR;
-    if(!send_get_ack(&lSTX, 1, sockfd, (struct sockaddr *)&serveraddr, sizeof(serveraddr))) {
-        std::cerr << "Could not connect to server\n";
-        return -1;
-    }
+
 
     fd_set sockets;
 
     // Clear the fd set
     FD_ZERO(&sockets);
 
-    //Add server socket and stdin to file desciptor set
+    //Add server socket to the file descriptor set
     FD_SET(sockfd, &sockets);
-    FD_SET(STDIN_FILENO, &sockets);
+    //FD_SET(STDIN_FILENO, &sockets);
 
     std::cout << "DNS Client" << std::endl;
 
     char * response = (char*)malloc(MAX_INPUT_SIZE);
 
+    std::string domain;
     while(1) {
+        domain.clear();
         //Get domain from user
-        std::cout << "Enter a domain name: " << std::endl;
-        fgets(domain, 64, stdin);
-        ntrim(domain);
+        std::cout << "Enter a domain name: ";
+        std::cin >> domain;
+        //ntrim(domain);
 
-        //Create a DNS packet
-        std::string name(domain);
-        DNSPacket packet(name);
+        //Create a DNS packets
+        DNSPacket packet(domain);
         packet.Print();
 
         //Send packet to server
+        char *packetData = packet.GetData();
+        printf("%s\n", packetData);
+        if(-1 == sendto(sockfd, packetData, sizeof(packetData), 0, (struct sockaddr *)&serveraddr, sizeof(serveraddr))) {
+            perror(strerror(errno));
+            return 0;
+        }
 
+        int n = recvfrom(sockfd, response, sizeof(response), 0, (struct sockaddr *)&serveraddr, (socklen_t *)sizeof(&serveraddr));
+
+
+        //packet.GetData(); //Returns char* to packets data
         //Wait for response
 
-        //Print response
+        //Print response2
     }
 
     //Close
