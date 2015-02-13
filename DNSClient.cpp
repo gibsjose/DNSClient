@@ -4,10 +4,35 @@
 #include <arpa/inet.h>
 
 #include "DNSPacket.h"
+#include "ConfigManager.hpp"
 #include "Exception.h"
 
-int main() {
+int main(int argc, char * argv[]) {
     //Initialization
+    ConfigManager lConfigManager;
+    try
+    {
+        lConfigManager.parseArgs(argc, argv);
+    }
+    catch(ParseException & e)
+    {
+        std::cerr << "Error: " << e.what() << "\n";
+        return -2;
+    }
+    catch(FileIOException & e)
+    {
+        std::cerr << "Error: " << e.what() << "\n";
+        return -3;
+    }
+    catch(...)
+    {
+        std::cerr << "Error: unhandled exception.\n";
+        return -1;
+    }
+
+    std::cout << "Resolver info:" << std::endl;
+    std::cout << "IP: " << lConfigManager.getResolverIPString() << std::endl;
+    std::cout << "Port: " << lConfigManager.getResolverPort() << std::endl;
 
     //Connect to server
     char port_str[16];
@@ -60,7 +85,7 @@ int main() {
     }
 
     fd_set sockets;
-    
+
     // Clear the fd set
     FD_ZERO(&sockets);
 

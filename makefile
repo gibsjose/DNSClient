@@ -1,17 +1,17 @@
 IDIR =
 CC = g++
-CFLAGS = -I$(IDIR) -Wall -g -std=c++0x
+CFLAGS = -I$(IDIR) -Wall -g -std=c++11
 
 ODIR = obj
 LDIR = ../lib
-LIBS = -lpthread
+LIBS =
 
 BIN = DNSClient
 
 _DEPS =
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ = DNSClient.o DNSPacket.o
+_OBJ = DNSClient.o DNSPacket.o ConfigManager.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 all: setup $(BIN)
