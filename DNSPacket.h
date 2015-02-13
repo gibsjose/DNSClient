@@ -2,6 +2,7 @@
 #define DNSPACKET_H
 
 #include <string>
+#include <cstring>
 #include <cstdlib>
 
 #include "StringUtilities.h"
@@ -87,12 +88,13 @@ class AdditionalRecordSection : public ExtendedRecord {};
 
 class DNSPacket {
 public:
-    DNSPacket(const std::string &);
-    ~DNSPacket(void) { free(data); }
-    void Print(void);
-    char * GetData(void);
-    size_t Size(void);
-    
+    DNSPacket(const std::string &);             //Construct a request packet with the domain name (rawName)
+    DNSPacket(const char *, const size_t);      //Construct a response packet with the raw data (data)
+    ~DNSPacket(void) { free(data); }            //Destructor (free data)
+    void Print(void);                           //Print the packet data
+    char * GetData(void);                       //Convert the packet into a byte array for transmission
+    size_t Size(void);                          //Size of the packet in bytes
+
     //Getters...
     short GetID(void) { return id; }
     short GetFlags(void) { return flags; }

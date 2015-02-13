@@ -128,6 +128,38 @@ DNSPacket::DNSPacket(const std::string & name) {
     question.EncodeName();
 }
 
+DNSPacket::DNSPacket(const char * data, const size_t length) {
+    if(length == 0) {
+        //EXCEPTION!
+        this->data = NULL;
+    }
+
+    // //Copy the data
+    // malloc(this->data, length);
+    // memcpy(this->data, data, length);
+    //
+    // //Parse the raw byte stream
+    // char * p = this->data;
+    //
+    // memcpy(&(this->id), p, sizeof(this->id));
+    // p += sizeof(this->id);
+    //
+    // memcpy(&(this->flags), p, sizeof(this->flags));
+    // p += sizeof(this->flags);
+    //
+    // memcpy(&(this->qdcount), p, sizeof(this->qdcount));
+    // p += sizeof(this->qdcount);
+    //
+    // memcpy(&(this->ancount), p, sizeof(this->ancount));
+    // p += sizeof(this->ancount);
+    //
+    // memcpy(&(this->nscount), p, sizeof(this->nscount));
+    // p += sizeof(this->nscount);
+    //
+    // memcpy(&(this->arcount), p, sizeof(this->arcount));
+    // p += sizeof(this->arcount);
+}
+
 void DNSPacket::Print(void) {
     std::cout << "DNS Packet:" << std::endl;
     std::cout << "\tID --> " << id << std::endl;
@@ -174,22 +206,29 @@ char * DNSPacket::GetData(void) {
     data = (char *)malloc(dataLen);
     char * p = data;
 
-    memcpy(p, &(this->id), sizeof(this->id));
+    short id = htons(this->id);
+    short flags = htons(this->flags);
+    short qdcount = htons(this->qdcount);
+    short ancount = htons(this->ancount);
+    short nscount = htons(this->nscount);
+    short arcount = htons(this->arcount);
+
+    memcpy(p, &(id), sizeof(this->id));
     p += sizeof(this->id);
 
-    memcpy(p, &(this->flags), sizeof(this->flags));
+    memcpy(p, &(flags), sizeof(this->flags));
     p += sizeof(this->flags);
 
-    memcpy(p, &(this->qdcount), sizeof(this->qdcount));
+    memcpy(p, &(qdcount), sizeof(this->qdcount));
     p += sizeof(this->qdcount);
 
-    memcpy(p, &(this->ancount), sizeof(this->ancount));
+    memcpy(p, &(ancount), sizeof(this->ancount));
     p += sizeof(this->ancount);
 
-    memcpy(p, &(this->nscount), sizeof(this->nscount));
+    memcpy(p, &(nscount), sizeof(this->nscount));
     p += sizeof(this->nscount);
 
-    memcpy(p, &(this->arcount), sizeof(this->arcount));
+    memcpy(p, &(arcount), sizeof(this->arcount));
     p += sizeof(this->arcount);
 
     memcpy(p, this->question.GetData(), this->question.Size());
