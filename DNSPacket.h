@@ -8,7 +8,7 @@
 
 #include "StringUtilities.h"
 
-const char RD_FLAG = (char)(1 << 8);        //RD (Recursion desired) bit set
+const short RD_FLAG = (short)(1 << 8);        //RD (Recursion desired) bit set
 const short CLASS_IN = 1;                   //IN = Internet class
 const short TYPE_A = 1;                     //A = IPv4 Addresses
 
