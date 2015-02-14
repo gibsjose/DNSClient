@@ -5,28 +5,42 @@
 #include <cstring>
 #include <cstdlib>
 #include <arpa/inet.h>
-#include <byteswap.h>
+
+#if defined (__APPLE__)
+    #include <netinet/in.h>
+    #include <libkern/OSByteOrder.h>
+#else
+    #include <byteswap.h>
+#endif
 
 #include "StringUtilities.h"
 
-const short RD_FLAG = (short)(1 << 8);        //RD (Recursion desired) bit set
+const short RD_FLAG = (short)(1 << 8);      //RD (Recursion desired) bit set
 const short CLASS_IN = 1;                   //IN = Internet class
 const short TYPE_A = 1;                     //A = IPv4 Addresses
 
 class Record {
 public:
     Record(void) {
-        name.clear();
+        name = NULL;
+        displayName.clear();
         rawName.clear();
         recordType = TYPE_A;
         recordClass = CLASS_IN;
         data = NULL;
     }
 
-    ~Record(void) { free(data); }
+    ~Record(void) {
+        if(name != NULL)
+            free(name);
+
+        if(data != NULL)
+            free(data);
+    }
 
     std::string & GetRawName(void) { return rawName; }
-    std::string & GetName(void) { return name; }
+    std::string & GetDisplayName(void) { return displayName; }
+    char * GetName(void) { return name; }
     short GetType(void) { return recordType; }
     short GetClass(void) { return recordClass; }
 
@@ -44,20 +58,17 @@ public:
     char * GetData(void);
 
 protected:
-    std::string name;       //3www6google3com0
-    std::string rawName;    //www.google.com
-    short recordType;       //TYPE_A (IPv4)
-    short recordClass;      //CLASS_IN (Internet)
-    char * data;            //Serialized byte data
+    char * name;           //(00000011)www(00000110)google(00000011)com(00000000)
+    std::string displayName;    //3www6google3com0
+    std::string rawName;        //www.google.com
+    short recordType;           //TYPE_A (IPv4)
+    short recordClass;          //CLASS_IN (Internet)
+    char * data;                //Serialized byte data
 };
 
 class ExtendedRecord : public Record {
 public:
     ExtendedRecord(void) {
-        name.clear();
-        rawName.clear();
-        recordType = TYPE_A;
-        recordClass = CLASS_IN;
         ttl = 0;
         rdlength = 0;
         rdata.clear();

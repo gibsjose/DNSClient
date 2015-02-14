@@ -4,14 +4,32 @@ void Record::EncodeName(void) {
     std::vector<std::string> tokens = StringUtilities::SplitString(rawName, ".");
     std::ostringstream oss;
 
+    //Allocate bytes for name (calloc to clear)
+    name = (char *)calloc(rawName.size() + 1, sizeof(char));
+    char * p = name;
+
     for(int i = 0; i < tokens.size(); i++) {
         std::string & token = tokens.at(i);
         oss << token.size();
         oss << token;
+
+        //Copy the size of the token (as an unsigned char)
+        unsigned char l = (unsigned char)token.size();
+        memcpy(p, &l, sizeof(char));
+        p += sizeof(char);
+
+        //Copy the actual token (minus the NULL byte)
+        memcpy(p, token.c_str(), token.size());
+        p += token.size();
     }
+
     oss << "0";
 
-    name = oss.str();
+    //Terminate with a '0'
+    unsigned char l = 0;
+    memcpy(p, &l, sizeof(char));
+
+    displayName = oss.str();
 }
 
 void Record::EncodeName(const std::string & rawName) {
@@ -21,7 +39,7 @@ void Record::EncodeName(const std::string & rawName) {
 
 void Record::Print(void) {
     std::cout << "\t\tRaw Name --> " << rawName << std::endl;
-    std::cout << "\t\tEncoded Name --> " << name << std::endl;
+    std::cout << "\t\tEncoded Name --> " << displayName << std::endl;
     std::cout << "\t\tType --> " << recordType << std::endl;
     std::cout << "\t\tClass --> " << recordClass << std::endl;
 }
@@ -29,7 +47,7 @@ void Record::Print(void) {
 size_t Record::Size(void) {
     size_t size = 0;
 
-    size += this->name.size();
+    size += strlen(this->name) + 1;
     size += sizeof(this->recordType);
     size += sizeof(this->recordClass);
 
@@ -42,20 +60,28 @@ char * Record::GetData(void) {
     data = (char *)malloc(dataLen);
     char * p = data;
 
-    memcpy(p, this->name.c_str(), this->name.size());
-    p += this->name.size();
+    memcpy(p, this->name, strlen(this->name) + 1);
+    p += strlen(this->name) + 1;
 
-    memcpy(p, &(this->recordType), sizeof(this->recordType));
+#if defined (__APPLE__)
+    short recordType = _OSSwapInt16(this->recordType);
+    short recordClass = _OSSwapInt16(this->recordClass);
+#else
+    short recordType = __bswap_16(this->recordType);
+    short recordClass = __bswap_16(this->recordClass);
+#endif
+
+    memcpy(p, &(recordType), sizeof(this->recordType));
     p += sizeof(this->recordType);
 
-    memcpy(p, &(this->recordClass), sizeof(this->recordClass));
+    memcpy(p, &(recordClass), sizeof(this->recordClass));
 
     return data;
 }
 
 void ExtendedRecord::Print(void) {
     std::cout << "\t\tRaw Name --> " << rawName << std::endl;
-    std::cout << "\t\tEncoded Name --> " << name << std::endl;
+    std::cout << "\t\tEncoded Name --> " << displayName << std::endl;
     std::cout << "\t\tType --> " << recordType << std::endl;
     std::cout << "\t\tClass --> " << recordClass << std::endl;
     std::cout << "\t\tTTL --> " << ttl << std::endl;
@@ -66,7 +92,7 @@ void ExtendedRecord::Print(void) {
 size_t ExtendedRecord::Size(void) {
     size_t size = 0;
 
-    size += this->name.size();
+    size += strlen(this->name) + 1;
     size += sizeof(this->recordType);
     size += sizeof(this->recordClass);
     size += sizeof(this->ttl);
@@ -82,19 +108,31 @@ char * ExtendedRecord::GetData(void) {
     data = (char *)malloc(dataLen);
     char * p = data;
 
-    memcpy(p, this->name.c_str(), this->name.size());
-    p += this->name.size();
+    memcpy(p, this->name, strlen(this->name) + 1);
+    p += strlen(this->name) + 1;
 
-    memcpy(p, &(this->recordType), sizeof(this->recordType));
+#if defined (__APPLE__)
+    short recordType = _OSSwapInt16(this->recordType);
+    short recordClass = _OSSwapInt16(this->recordClass);
+    long ttl = _OSSwapInt16(this->ttl);
+    short rdlength = _OSSwapInt16(this->rdlength);
+#else
+    short recordType = __bswap_16(this->recordType);
+    short recordClass = __bswap_16(this->recordClass);
+    long ttl = __bswap_16(this->ttl);
+    short rdlength = __bswap_16(this->rdlength);
+#endif
+
+    memcpy(p, &(recordType), sizeof(this->recordType));
     p += sizeof(this->recordType);
 
-    memcpy(p, &(this->recordClass), sizeof(this->recordClass));
+    memcpy(p, &(recordClass), sizeof(this->recordClass));
     p += sizeof(this->recordClass);
 
-    memcpy(p, &(this->ttl), sizeof(this->ttl));
+    memcpy(p, &(ttl), sizeof(this->ttl));
     p += sizeof(this->ttl);
 
-    memcpy(p, &(this->rdlength), sizeof(this->rdlength));
+    memcpy(p, &(rdlength), sizeof(this->rdlength));
     p += sizeof(this->rdlength);
 
     memcpy(p, this->rdata.c_str(), this->rdata.size());
@@ -126,6 +164,11 @@ DNSPacket::DNSPacket(const std::string & name) {
 
     //Build the length-encoded name
     question.EncodeName();
+
+    //Encode the names for the empty sections as well in order to malloc 'name'
+    answer.EncodeName();
+    nameServer.EncodeName();
+    additionalRecord.EncodeName();
 }
 
 DNSPacket::DNSPacket(const char * data, const size_t length) {
@@ -208,12 +251,21 @@ char * DNSPacket::GetData(void) {
     data = (char *)malloc(dataLen);
     char * p = data;
 
+#if defined (__APPLE__)
+    short id = _OSSwapInt16(this->id);
+    short flags = _OSSwapInt16(this->flags);
+    short qdcount = _OSSwapInt16(this->qdcount);
+    short ancount = _OSSwapInt16(this->ancount);
+    short nscount = _OSSwapInt16(this->nscount);
+    short arcount = _OSSwapInt16(this->arcount);
+#else
     short id = __bswap_16(this->id);
     short flags = __bswap_16(this->flags);
     short qdcount = __bswap_16(this->qdcount);
     short ancount = __bswap_16(this->ancount);
     short nscount = __bswap_16(this->nscount);
     short arcount = __bswap_16(this->arcount);
+#endif
 
     memcpy(p, &(id), sizeof(this->id));
     p += sizeof(this->id);
