@@ -94,15 +94,15 @@ protected:
     std::string rdata;
 };
 
-class QuestionSection : public Record {};
-class AnswerSection : public ExtendedRecord {};
-class NameServerSection : public ExtendedRecord {};
-class AdditionalRecordSection : public ExtendedRecord {};
+class QuestionRecord : public Record {};
+class AnswerRecord : public ExtendedRecord {};
+class NameServerRecord : public ExtendedRecord {};
+class AdditionalRecord : public ExtendedRecord {};
 
 class DNSPacket {
 public:
     DNSPacket(const std::string &);             //Construct a request packet with the domain name (rawName)
-    DNSPacket(const char *, const size_t);      //Construct a response packet with the raw data (data)
+    DNSPacket(const std::string &, const char *, const size_t);      //Construct a response packet with the raw data (data)
     ~DNSPacket(void) { free(data); }            //Destructor (free data)
     void Print(void);                           //Print the packet data
     char * GetData(void);                       //Convert the packet into a byte array for transmission
@@ -115,10 +115,10 @@ public:
     short GetAnswerCount(void) { return ancount; }
     short GetNameServerCount(void) { return nscount; }
     short GetAdditionalRecordCount(void) { return arcount; }
-    QuestionSection & GetQuestionSection(void) { return question; }
-    AnswerSection & GetAnswerSection(void) { return answer; }
-    NameServerSection & GetNameServerSection(void) { return nameServer; }
-    AdditionalRecordSection & GetAdditionalRecordSection(void) { return additionalRecord; }
+    std::vector<QuestionRecord> & GetQuestionSection(void) { return questions; }
+    std::vector<AnswerRecord> & GetAnswerSection(void) { return answers; }
+    std::vector<NameServerRecord> & GetNameServerSection(void) { return nameServers; }
+    std::vector<AdditionalRecord> & GetAdditionalSection(void) { return additionals; }
 
 private:
     short id;
@@ -127,10 +127,10 @@ private:
     short ancount;
     short nscount;
     short arcount;
-    QuestionSection question;
-    AnswerSection answer;
-    NameServerSection nameServer;
-    AdditionalRecordSection additionalRecord;
+    std::vector<QuestionRecord> questions;
+    std::vector<AnswerRecord> answers;
+    std::vector<NameServerRecord> nameServers;
+    std::vector<AdditionalRecord> additionals;
 
     char * data;
 };

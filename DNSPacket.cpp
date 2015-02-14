@@ -157,6 +157,8 @@ DNSPacket::DNSPacket(const std::string & name) {
 
     data = NULL;
 
+    QuestionRecord question;
+
     //Build the question section
     question.SetRawName(name);
     question.SetType(TYPE_A);
@@ -165,42 +167,124 @@ DNSPacket::DNSPacket(const std::string & name) {
     //Build the length-encoded name
     question.EncodeName();
 
+    //Add the question
+    questions.push_back(question);
+
     //Encode the names for the empty sections as well in order to malloc 'name'
-    answer.EncodeName();
-    nameServer.EncodeName();
-    additionalRecord.EncodeName();
+    // AnswerRecord answer;
+    // answer.EncodeName();
+    // answers.push_back(answer);
+    //
+    // NameServerRecord nameServer;
+    // nameServer.EncodeName();
+    // nameServers.push_back(nameServer);
+    //
+    // AdditionalRecord additionalRecord;
+    // additionalRecord.EncodeName();
+    // additionals.push_back(additionalRecord);
 }
 
-DNSPacket::DNSPacket(const char * data, const size_t length) {
+DNSPacket::DNSPacket(const std::string & name, const char * data, const size_t length) {
     if(length == 0) {
         //EXCEPTION!
         this->data = NULL;
     }
 
-    // //Copy the data
-    // malloc(this->data, length);
-    // memcpy(this->data, data, length);
-    //
-    // //Parse the raw byte stream
-    // char * p = this->data;
-    //
-    // memcpy(&(this->id), p, sizeof(this->id));
-    // p += sizeof(this->id);
-    //
-    // memcpy(&(this->flags), p, sizeof(this->flags));
-    // p += sizeof(this->flags);
-    //
-    // memcpy(&(this->qdcount), p, sizeof(this->qdcount));
-    // p += sizeof(this->qdcount);
-    //
-    // memcpy(&(this->ancount), p, sizeof(this->ancount));
-    // p += sizeof(this->ancount);
-    //
-    // memcpy(&(this->nscount), p, sizeof(this->nscount));
-    // p += sizeof(this->nscount);
-    //
-    // memcpy(&(this->arcount), p, sizeof(this->arcount));
-    // p += sizeof(this->arcount);
+    QuestionRecord question;
+    question.SetRawName(name);
+    question.EncodeName();
+
+    std::cout << "length = " << length << std::endl;
+
+    //Copy the data
+    this->data = (char *)malloc(length);
+    memcpy(this->data, data, length);
+
+    //Parse the raw byte stream
+    char * p = this->data;
+
+    memcpy(&(this->id), p, sizeof(this->id));
+    p += sizeof(this->id);
+
+    memcpy(&(this->flags), p, sizeof(this->flags));
+    p += sizeof(this->flags);
+
+    memcpy(&(this->qdcount), p, sizeof(this->qdcount));
+    p += sizeof(this->qdcount);
+
+    memcpy(&(this->ancount), p, sizeof(this->ancount));
+    p += sizeof(this->ancount);
+
+    memcpy(&(this->nscount), p, sizeof(this->nscount));
+    p += sizeof(this->nscount);
+
+    memcpy(&(this->arcount), p, sizeof(this->arcount));
+    p += sizeof(this->arcount);
+
+    //Parse the question section
+    short recordType;
+    short recordClass;
+
+    //Skip the bytes of the query 'name' field
+    p += strlen(this->questions.at(0).GetName());
+
+    memcpy(&recordType, p, sizeof(recordType));
+    p += sizeof(recordType);
+    this->questions.at(0).SetType(recordType);
+
+    memcpy(&recordClass, p, sizeof(recordClass));
+    p += sizeof(recordClass);
+    this->questions.at(0).SetClass(recordClass);
+
+    //Parse the answer section
+    for(int i = 0; i < this->ancount; i++) {
+        AnswerRecord answer;
+
+        //Skip 2 bytes for the name (should be 0xC00C)
+        p += 2;
+        answer.SetRawName(name);
+        answer.EncodeName();
+
+        //Copy the type
+        short aType;
+        memcpy(&aType, p, sizeof(short));
+        p += sizeof(short);
+        answer.SetType(aType);
+
+        //Copy the class
+        short aClass;
+        memcpy(&aClass, p, sizeof(aClass));
+        p += sizeof(aClass);
+        answer.SetClass(aClass);
+
+        //Copy the time to live
+        long aTTL;
+        memcpy(&aTTL, p, sizeof(aTTL));
+        p += sizeof(aTTL);
+        answer.SetTTL(aTTL);
+
+        //Copy the data length
+        short aRdlength;
+        memcpy(&aRdlength, p, sizeof(aRdlength));
+        p += sizeof(aRdlength);
+        answer.SetRecordDataLength(aRdlength);
+
+        //Copy the record data
+        char * rdata = (char *)malloc(aRdlength);
+        memcpy(rdata, p, aRdlength);
+        p += aRdlength;
+
+        if((aType == TYPE_A) && (aRdlength < 4)) {
+            //EXCEPTION! Should always be 4 for an answer of type A (IPv4...)
+            answer.SetRecordData(std::string());
+        } else {
+            std::ostringstream oss;
+            oss << rdata[0] << "." << rdata[1] << "." << rdata[2] << "." << rdata[3];
+            answer.SetRecordData(oss.str());
+        }
+
+        this->answers.push_back(answer);
+    }
 }
 
 void DNSPacket::Print(void) {
@@ -213,16 +297,28 @@ void DNSPacket::Print(void) {
     std::cout << "\tAdditional Record Count --> " << arcount << std::endl;
 
     std::cout << "\tQuestion Section" << std::endl;
-    question.Print();
+    for(int i = 0; i < questions.size(); i++) {
+        std::cout << "\tQuestion " << i << std::endl;
+        questions.at(i).Print();
+    }
 
     std::cout << "\tAnswer Section" << std::endl;
-    answer.Print();
+    for(int i = 0; i < answers.size(); i++) {
+        std::cout << "\tAnswer " << i << std::endl;
+        answers.at(i).Print();
+    }
 
     std::cout << "\tName Server Section" << std::endl;
-    nameServer.Print();
+    for(int i = 0; i < nameServers.size(); i++) {
+        std::cout << "\tName Server " << i << std::endl;
+        nameServers.at(i).Print();
+    }
 
     std::cout << "\tAdditional Record Section" << std::endl;
-    additionalRecord.Print();
+    for(int i = 0; i < additionals.size(); i++) {
+        std::cout << "\tAdditonal Record " << i << std::endl;
+        additionals.at(i).Print();
+    }
 }
 
 size_t DNSPacket::Size(void) {
@@ -234,10 +330,22 @@ size_t DNSPacket::Size(void) {
     size += sizeof(this->ancount);
     size += sizeof(this->nscount);
     size += sizeof(this->arcount);
-    size += question.Size();
-    size += answer.Size();
-    size += nameServer.Size();
-    size += additionalRecord.Size();
+
+    for(int i = 0; i < qdcount; i++) {
+        size += questions.at(i).Size();
+    }
+
+    for(int i = 0; i < ancount; i++) {
+        size += answers.at(i).Size();
+    }
+
+    for(int i = 0; i < nscount; i++) {
+        size += nameServers.at(i).Size();
+    }
+
+    for(int i = 0; i < arcount; i++) {
+        size += additionals.at(i).Size();
+    }
 
     return size;
 }
@@ -246,7 +354,6 @@ char * DNSPacket::GetData(void) {
 
     //Malloc the required amount of space
     size_t dataLen = this->Size();
-    std::cout << "dataLen " << dataLen << std::endl;
 
     data = (char *)malloc(dataLen);
     char * p = data;
@@ -285,16 +392,25 @@ char * DNSPacket::GetData(void) {
     memcpy(p, &(arcount), sizeof(this->arcount));
     p += sizeof(this->arcount);
 
-    memcpy(p, this->question.GetData(), this->question.Size());
-    p += this->question.Size();
+    for(int i = 0; i < this->questions.size(); i++) {
+        memcpy(p, this->questions.at(i).GetData(), this->questions.at(i).Size());
+        p += this->questions.at(i).Size();
+    }
 
-    memcpy(p, this->answer.GetData(), this->answer.Size());
-    p += this->answer.Size();
+    for(int i = 0; i < this->answers.size(); i++) {
+        memcpy(p, this->answers.at(i).GetData(), this->answers.at(i).Size());
+        p += this->answers.at(i).Size();
+    }
 
-    memcpy(p, this->nameServer.GetData(), this->nameServer.Size());
-    p += this->nameServer.Size();
+    for(int i = 0; i < this->nameServers.size(); i++) {
+        memcpy(p, this->nameServers.at(i).GetData(), this->nameServers.at(i).Size());
+        p += this->nameServers.at(i).Size();
+    }
 
-    memcpy(p, this->additionalRecord.GetData(), this->additionalRecord.Size());
+    for(int i = 0; i < this->additionals.size(); i++) {
+        memcpy(p, this->additionals.at(i).GetData(), this->additionals.at(i).Size());
+        p += this->additionals.at(i).Size();
+    }
 
     return data;
 }

@@ -101,26 +101,25 @@ int main(int argc, char * argv[]) {
         //Get domain from user
         std::cout << "Enter a domain name: ";
         std::cin >> domain;
-        //ntrim(domain);
 
-        //Create a DNS packets
-        DNSPacket packet(domain);
-        packet.Print();
+        //Create a request DNS packets
+        DNSPacket requestPacket(domain);
+        requestPacket.Print();
 
         //Send packet to server
-        char *packetData = packet.GetData();
-        if(-1 == sendto(sockfd, packetData, packet.Size(), 0, (struct sockaddr *)&serveraddr, sizeof(serveraddr))) {
+        char *packetData = requestPacket.GetData();
+        if(-1 == sendto(sockfd, packetData, requestPacket.Size(), 0, (struct sockaddr *)&serveraddr, sizeof(serveraddr))) {
             perror(strerror(errno));
             return 0;
         }
 
         int n = recvfrom(sockfd, response, sizeof(response), 0, (struct sockaddr *)&serveraddr, (socklen_t *)sizeof(&serveraddr));
 
+        //Create a packet for the response packet
+        //DNSPacket responsePacket(domain, response, n);
 
-        //packet.GetData(); //Returns char* to packets data
-        //Wait for response
-
-        //Print response2
+        //Print response
+        //responsePacket.Print();
     }
 
     //Close
