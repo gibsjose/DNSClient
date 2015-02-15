@@ -40,6 +40,13 @@ void ConfigManager::parseArgs(int aArgc, char * aArgv[])
     {
         parseResolver(mResolverIP);
     }
+
+    // DEBUG!!!!!
+    if(mResolverIP == -1)
+    {
+        std::cout << "DEBUG!! Defaulting to port 53..." << std::endl;
+        mResolverIP = 53;
+    }
 }
 
 int ConfigManager::getResolverPort() const
