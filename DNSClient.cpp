@@ -49,12 +49,12 @@ int main(int argc, char * argv[]) {
     //  0 is a parameter used for some options for certain types of sockets, unused for INET sockets
     int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 
-    //Create timeval struct
+    //Create timeval struct with 2s timeout.
     struct timeval to;
-    to.tv_sec = 5;
+    to.tv_sec = 2;
     to.tv_usec = 0;
 
-    //Make socket only wait for 5 seconds w/ setsockopt
+    //Make socket timeout after certain time with no data w/ setsockopt
     //  socket descriptor
     //  socket level (internet sockets, local sockets, etc.)
     //  option we want (SO_RCVTIMEO = Receive timeout)
@@ -101,9 +101,8 @@ int main(int argc, char * argv[]) {
         //Get domain from user
         std::cout << "Enter a domain name: ";
         std::cin >> domain;
-        //ntrim(domain);
 
-        //Create a DNS packets
+        //Create a DNS packet
         DNSPacket packet(domain);
         packet.Print();
 
