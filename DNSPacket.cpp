@@ -37,6 +37,17 @@ void Record::EncodeName(const std::string & rawName) {
     this->EncodeName();
 }
 
+void Record::DecodeName(const char * name) {
+    std::string tmp;
+
+    //3www6google3com0
+
+    //Decode into www.google.com
+
+    //Encode to set display name
+    this->EncodeName(tmp);
+}
+
 void Record::Print(void) {
     std::cout << "\t\tRaw Name --> " << rawName << std::endl;
     std::cout << "\t\tEncoded Name --> " << displayName << std::endl;
@@ -184,15 +195,11 @@ DNSPacket::DNSPacket(const std::string & name) {
     // additionals.push_back(additionalRecord);
 }
 
-DNSPacket::DNSPacket(const std::string & name, const char * data, const size_t length) {
+DNSPacket::DNSPacket(const char * data, const size_t length) {
     if(length == 0) {
         //EXCEPTION!
         this->data = NULL;
     }
-
-    QuestionRecord question;
-    question.SetRawName(name);
-    question.EncodeName();
 
     std::cout << "length = " << length << std::endl;
 
@@ -221,12 +228,19 @@ DNSPacket::DNSPacket(const std::string & name, const char * data, const size_t l
     memcpy(&(this->arcount), p, sizeof(this->arcount));
     p += sizeof(this->arcount);
 
-    //Parse the question section
-    short recordType;
-    short recordClass;
+    char * name;
 
     //Skip the bytes of the query 'name' field
-    p += strlen(this->questions.at(0).GetName());
+    while(*p != (char)0) {
+
+        p++;
+    }
+
+    //Sets the rawName and displayName of the question
+    this->questions.at(0).DecodeName(name);
+
+    short recordType;
+    short recordClass;
 
     memcpy(&recordType, p, sizeof(recordType));
     p += sizeof(recordType);

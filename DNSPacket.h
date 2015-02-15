@@ -51,6 +51,8 @@ public:
     void EncodeName(void);
     void EncodeName(const std::string &);
 
+    void DecodeName(const char *);
+
     void Print(void);
 
     size_t Size(void);
@@ -58,7 +60,7 @@ public:
     char * GetData(void);
 
 protected:
-    char * name;           //(00000011)www(00000110)google(00000011)com(00000000)
+    char * name;                //(00000011)www(00000110)google(00000011)com(00000000)
     std::string displayName;    //3www6google3com0
     std::string rawName;        //www.google.com
     short recordType;           //TYPE_A (IPv4)
