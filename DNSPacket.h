@@ -4,6 +4,7 @@
 #include <string>
 #include <cstring>
 #include <cstdlib>
+#include <bitset>
 #include <arpa/inet.h>
 
 #if defined (__APPLE__)
@@ -31,11 +32,15 @@ public:
     }
 
     ~Record(void) {
-        if(name != NULL)
+        if(name != NULL) {
             free(name);
+            name = NULL;
+        }
 
-        if(data != NULL)
+        if(data != NULL) {
             free(data);
+            data = NULL;
+        }
     }
 
     std::string & GetRawName(void) { return rawName; }
@@ -104,8 +109,15 @@ class AdditionalRecord : public ExtendedRecord {};
 class DNSPacket {
 public:
     DNSPacket(const std::string &);             //Construct a request packet with the domain name (rawName)
-    DNSPacket(const std::string &, const char *, const size_t);      //Construct a response packet with the raw data (data)
-    ~DNSPacket(void) { free(data); }            //Destructor (free data)
+    DNSPacket(const char *, const size_t);      //Construct a response packet with the raw data (data)
+
+    ~DNSPacket(void) {
+        if(data != NULL) {
+            free(data);
+            data = NULL;
+        }
+    }
+
     void Print(void);                           //Print the packet data
     char * GetData(void);                       //Convert the packet into a byte array for transmission
     size_t Size(void);                          //Size of the packet in bytes

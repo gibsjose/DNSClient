@@ -113,13 +113,21 @@ int main(int argc, char * argv[]) {
             return 0;
         }
 
-        int n = recvfrom(sockfd, response, sizeof(response), 0, (struct sockaddr *)&serveraddr, (socklen_t *)sizeof(&serveraddr));
+        unsigned int len = sizeof(serveraddr);
+        int n = recvfrom(sockfd, response, MAX_INPUT_SIZE, 0, (struct sockaddr *)&serveraddr, &len);
+
+        if(n < 0) {
+            std::cerr << "Error receiving packet: recvfrom(): " << strerror(errno) << std::endl;
+            return -1;
+        }
+
+        printf("n = %d\n", n);
 
         //Create a packet for the response packet
-        //DNSPacket responsePacket(domain, response, n);
+        DNSPacket responsePacket(response, n);
 
         //Print response
-        //responsePacket.Print();
+        responsePacket.Print();
     }
 
     //Close

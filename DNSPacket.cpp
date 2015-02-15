@@ -201,6 +201,8 @@ DNSPacket::DNSPacket(const char * data, const size_t length) {
         this->data = NULL;
     }
 
+    QuestionRecord question;
+
     std::cout << "length = " << length << std::endl;
 
     //Copy the data
@@ -210,88 +212,127 @@ DNSPacket::DNSPacket(const char * data, const size_t length) {
     //Parse the raw byte stream
     char * p = this->data;
 
+    // for(int i = 0; i < (length - 1); i += 2) {
+    //     short t = 0;
+    //     t = (p[i + 1] | (p[i] << 8));
+    //
+    //     std::bitset<16> x(t);
+    //     std::cout << "p[" << i << "] = " << +t << "\t(" << x << ")"<< std::endl;
+    // }
+
     memcpy(&(this->id), p, sizeof(this->id));
     p += sizeof(this->id);
+    this->id = _OSSwapInt16(this->id);
+
+    std::cerr << "this->id = " << this->id << std::endl;
 
     memcpy(&(this->flags), p, sizeof(this->flags));
     p += sizeof(this->flags);
+    this->flags = _OSSwapInt16(this->flags);
+
+    std::cerr << "this->flags = " << (unsigned short)this->flags << std::endl;
 
     memcpy(&(this->qdcount), p, sizeof(this->qdcount));
     p += sizeof(this->qdcount);
+    this->qdcount = _OSSwapInt16(this->qdcount);
+
+    std::cerr << "this->qdcount = " << (unsigned short)this->qdcount << std::endl;
 
     memcpy(&(this->ancount), p, sizeof(this->ancount));
     p += sizeof(this->ancount);
+    this->ancount = _OSSwapInt16(this->ancount);
+
+    std::cerr << "this->ancount = " << (unsigned short)this->ancount << std::endl;
 
     memcpy(&(this->nscount), p, sizeof(this->nscount));
     p += sizeof(this->nscount);
+    this->nscount = _OSSwapInt16(this->nscount);
+
+    std::cerr << "this->nscount = " << (unsigned short)this->nscount << std::endl;
 
     memcpy(&(this->arcount), p, sizeof(this->arcount));
     p += sizeof(this->arcount);
+    this->arcount = _OSSwapInt16(this->arcount);
 
-    char * name;
+    std::cerr << "this->arcount = " << (unsigned short)this->arcount << std::endl;
 
-    //Skip the bytes of the query 'name' field
-    while(*p != (char)0) {
+    //Malloc the correct number of bytes to fit the question name
+    //  p should be terminated with a 0x00 byte as per DNS specs
+    char * name = (char *)malloc(strlen(p) + 1);
+    memcpy(name, p, strlen(p) + 1);
+    p += strlen(p) + 1;
 
-        p++;
-    }
-
-    //Sets the rawName and displayName of the question
-    this->questions.at(0).DecodeName(name);
+    //Sets the rawName and displayName of the question and re-encodes it
+    question.DecodeName(name);
 
     short recordType;
     short recordClass;
 
     memcpy(&recordType, p, sizeof(recordType));
     p += sizeof(recordType);
-    this->questions.at(0).SetType(recordType);
+    recordType = _OSSwapInt16(recordType);
+    question.SetType(recordType);
 
     memcpy(&recordClass, p, sizeof(recordClass));
     p += sizeof(recordClass);
-    this->questions.at(0).SetClass(recordClass);
+    recordClass = _OSSwapInt16(recordClass);
+    question.SetClass(recordClass);
+
+    //Add the question record
+    this->questions.push_back(question);
 
     //Parse the answer section
     for(int i = 0; i < this->ancount; i++) {
         AnswerRecord answer;
 
         //Skip 2 bytes for the name (should be 0xC00C)
+        //Parse the name...
         p += 2;
-        answer.SetRawName(name);
+
+        //Malloc the name
+        answer.SetRawName(std::string());
         answer.EncodeName();
 
         //Copy the type
         short aType;
         memcpy(&aType, p, sizeof(short));
         p += sizeof(short);
+        aType = _OSSwapInt16(aType);
         answer.SetType(aType);
 
         //Copy the class
         short aClass;
         memcpy(&aClass, p, sizeof(aClass));
         p += sizeof(aClass);
+        aClass = _OSSwapInt16(aClass);
         answer.SetClass(aClass);
 
         //Copy the time to live
         long aTTL;
         memcpy(&aTTL, p, sizeof(aTTL));
         p += sizeof(aTTL);
+        aTTL = _OSSwapInt16(aTTL);
         answer.SetTTL(aTTL);
 
         //Copy the data length
         short aRdlength;
         memcpy(&aRdlength, p, sizeof(aRdlength));
         p += sizeof(aRdlength);
+        aRdlength = _OSSwapInt16(aRdlength);
         answer.SetRecordDataLength(aRdlength);
-
-        //Copy the record data
-        char * rdata = (char *)malloc(aRdlength);
-        memcpy(rdata, p, aRdlength);
-        p += aRdlength;
 
         if((aType == TYPE_A) && (aRdlength < 4)) {
             //EXCEPTION! Should always be 4 for an answer of type A (IPv4...)
             answer.SetRecordData(std::string());
         } else {
+            //Copy the record data
+
+            std::cerr << "aRdlength = " << aRdlength << std::endl;
+
+            char * rdata = (char *)malloc(aRdlength);
+            memcpy(rdata, p, aRdlength);
+            p += aRdlength;
+
             std::ostringstream oss;
             oss << rdata[0] << "." << rdata[1] << "." << rdata[2] << "." << rdata[3];
             answer.SetRecordData(oss.str());
