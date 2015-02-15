@@ -10,8 +10,12 @@
 #if defined (__APPLE__)
     #include <netinet/in.h>
     #include <libkern/OSByteOrder.h>
+    #define SWAP16(x) (_OSSwapInt16(x))
+    #define SWAP32(x) (_OSSwapInt32(x))
 #else
     #include <byteswap.h>
+    #define SWAP16(x) (__bswap_16(x))
+    #define SWAP32(x) (__bswap_32(x))
 #endif
 
 #include "StringUtilities.h"
