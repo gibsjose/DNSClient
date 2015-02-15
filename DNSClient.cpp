@@ -49,12 +49,12 @@ int main(int argc, char * argv[]) {
     //  0 is a parameter used for some options for certain types of sockets, unused for INET sockets
     int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 
-    //Create timeval struct
+    //Create timeval struct with 2s timeout.
     struct timeval to;
-    to.tv_sec = 5;
+    to.tv_sec = 2;
     to.tv_usec = 0;
 
-    //Make socket only wait for 5 seconds w/ setsockopt
+    //Make socket timeout after certain time with no data w/ setsockopt
     //  socket descriptor
     //  socket level (internet sockets, local sockets, etc.)
     //  option we want (SO_RCVTIMEO = Receive timeout)
@@ -101,26 +101,34 @@ int main(int argc, char * argv[]) {
         //Get domain from user
         std::cout << "Enter a domain name: ";
         std::cin >> domain;
-        //ntrim(domain);
 
-        //Create a DNS packets
-        DNSPacket packet(domain);
-        packet.Print();
+        //Create a request DNS packets
+        DNSPacket requestPacket(domain);
+
+        std::cout << "REQUEST PACKET" << std::endl;
+        requestPacket.Print();
 
         //Send packet to server
-        char *packetData = packet.GetData();
-        if(-1 == sendto(sockfd, packetData, packet.Size(), 0, (struct sockaddr *)&serveraddr, sizeof(serveraddr))) {
+        char *packetData = requestPacket.GetData();
+        if(-1 == sendto(sockfd, packetData, requestPacket.Size(), 0, (struct sockaddr *)&serveraddr, sizeof(serveraddr))) {
             perror(strerror(errno));
             return 0;
         }
 
-        int n = recvfrom(sockfd, response, sizeof(response), 0, (struct sockaddr *)&serveraddr, (socklen_t *)sizeof(&serveraddr));
+        unsigned int len = sizeof(serveraddr);
+        int n = recvfrom(sockfd, response, MAX_INPUT_SIZE, 0, (struct sockaddr *)&serveraddr, &len);
 
+        if(n < 0) {
+            std::cerr << "Error receiving packet: recvfrom(): " << strerror(errno) << std::endl;
+            return -1;
+        }
 
-        //packet.GetData(); //Returns char* to packets data
-        //Wait for response
+        //Create a packet for the response packet
+        DNSPacket responsePacket(response, n);
 
-        //Print response2
+        //Print response
+        std::cout << "\nRESPONSE PACKET" << std::endl;
+        responsePacket.Print();
     }
 
     //Close

@@ -14,11 +14,11 @@ ConfigManager::~ConfigManager()
 void ConfigManager::parseArgs(int aArgc, char * aArgv[])
 {
     // Attempt to find the port and IP of the DNS resolver on the command line.
-    if(aArgc < 3)
-    {
-        std::cerr << "Not enough arguments. Ex: DNSClient -p 53 [-ip 127.0.0.1]\n";
-        exit(-1);
-    }
+    // if(aArgc < 3)
+    // {
+    //     std::cerr << "Not enough arguments. Ex: DNSClient -p 53 [-ip 127.0.0.1]\n";
+    //     exit(-1);
+    // }
     for(int i = 1; i + 1 < aArgc; i = i + 2)
     {
       char * lArgFlag = aArgv[i];
@@ -39,6 +39,13 @@ void ConfigManager::parseArgs(int aArgc, char * aArgv[])
     if(mResolverIP.empty())
     {
         parseResolver(mResolverIP);
+    }
+
+    // DEBUG!!!!!
+    if(mResolverPort == -1)
+    {
+        std::cout << "DEBUG!! Defaulting to port 53..." << std::endl;
+        mResolverPort = 53;
     }
 }
 
