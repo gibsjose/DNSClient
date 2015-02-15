@@ -104,6 +104,8 @@ int main(int argc, char * argv[]) {
 
         //Create a request DNS packets
         DNSPacket requestPacket(domain);
+
+        std::cout << "REQUEST PACKET" << std::endl;
         requestPacket.Print();
 
         //Send packet to server
@@ -121,12 +123,11 @@ int main(int argc, char * argv[]) {
             return -1;
         }
 
-        printf("n = %d\n", n);
-
         //Create a packet for the response packet
         DNSPacket responsePacket(response, n);
 
         //Print response
+        std::cout << "\nRESPONSE PACKET" << std::endl;
         responsePacket.Print();
     }
 

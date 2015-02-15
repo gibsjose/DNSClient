@@ -191,8 +191,6 @@ DNSPacket::DNSPacket(const char * data, const size_t length) {
 
     QuestionRecord question;
 
-    std::cout << "length = " << length << std::endl;
-
     //Copy the data
     this->data = (char *)malloc(length);
     memcpy(this->data, data, length);
@@ -200,49 +198,29 @@ DNSPacket::DNSPacket(const char * data, const size_t length) {
     //Parse the raw byte stream
     char * p = this->data;
 
-    // for(int i = 0; i < (length - 1); i += 2) {
-    //     short t = 0;
-    //     t = (p[i + 1] | (p[i] << 8));
-    //
-    //     std::bitset<16> x(t);
-    //     std::cout << "p[" << i << "] = " << +t << "\t(" << x << ")"<< std::endl;
-    // }
-
     memcpy(&(this->id), p, sizeof(this->id));
     p += sizeof(this->id);
     this->id = SWAP16(this->id);
-
-    std::cerr << "this->id = " << this->id << std::endl;
 
     memcpy(&(this->flags), p, sizeof(this->flags));
     p += sizeof(this->flags);
     this->flags = SWAP16(this->flags);
 
-    std::cerr << "this->flags = " << this->flags << std::endl;
-
     memcpy(&(this->qdcount), p, sizeof(this->qdcount));
     p += sizeof(this->qdcount);
     this->qdcount = SWAP16(this->qdcount);
-
-    std::cerr << "this->qdcount = " << (unsigned short)this->qdcount << std::endl;
 
     memcpy(&(this->ancount), p, sizeof(this->ancount));
     p += sizeof(this->ancount);
     this->ancount = SWAP16(this->ancount);
 
-    std::cerr << "this->ancount = " << (unsigned short)this->ancount << std::endl;
-
     memcpy(&(this->nscount), p, sizeof(this->nscount));
     p += sizeof(this->nscount);
     this->nscount = SWAP16(this->nscount);
 
-    std::cerr << "this->nscount = " << (unsigned short)this->nscount << std::endl;
-
     memcpy(&(this->arcount), p, sizeof(this->arcount));
     p += sizeof(this->arcount);
     this->arcount = SWAP16(this->arcount);
-
-    std::cerr << "this->arcount = " << (unsigned short)this->arcount << std::endl;
 
     //Malloc the correct number of bytes to fit the question name
     //  p should be terminated with a 0x00 byte as per DNS specs
@@ -320,11 +298,6 @@ DNSPacket::DNSPacket(const char * data, const size_t length) {
             memcpy(rdata, p, aRdlength);
             p += aRdlength;
             char str[32];
-
-            for(int j = 0; j < 4; j++) {
-                std::bitset<8> x(rdata[j]);
-                std::cout << "rdata[" << j << "]" << static_cast<unsigned>(rdata[j]) << " (" << x << ")" << std::endl;
-            }
 
             sprintf(str, "%u.%u.%u.%u", static_cast<unsigned>(rdata[0]), static_cast<unsigned>(rdata[1]), static_cast<unsigned>(rdata[2]), static_cast<unsigned>(rdata[3]));
 
