@@ -23,6 +23,7 @@
 const short RD_FLAG = (short)(1 << 8);      //RD (Recursion desired) bit set
 const short CLASS_IN = 1;                   //IN = Internet class
 const short TYPE_A = 1;                     //A = IPv4 Addresses
+const short TYPE_CNAME = 5;                 //CNAME = Cononical Name (alias)
 
 class Record {
 public:
@@ -37,7 +38,7 @@ public:
 
     ~Record(void) {
         if(name != NULL) {
-            free(name);
+            //free(name);
             name = NULL;
         }
 

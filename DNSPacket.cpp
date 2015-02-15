@@ -38,14 +38,27 @@ void Record::EncodeName(const std::string & rawName) {
 }
 
 void Record::DecodeName(const char * name) {
-    std::string tmp;
 
-    //3www6google3com0
+    unsigned int len = strlen(name);
 
-    //Decode into www.google.com
+    const char * p = name;
+    char * tmp = (char *)malloc(len - 1);
+
+    while(*p != (char)0) {
+        strncat(tmp, (p + 1), *p);
+
+        p += (*p + 1);
+
+        if(*p != (char)0) {
+            strncat(tmp, ".", 1);
+        }
+    }
 
     //Encode to set display name
-    this->EncodeName(tmp);
+    this->EncodeName(std::string(tmp));
+
+    //Free tmp
+    free(tmp);
 }
 
 void Record::Print(void) {
@@ -253,11 +266,18 @@ DNSPacket::DNSPacket(const char * data, const size_t length) {
 
         //Skip 2 bytes for the name (should be 0xC00C)
         //Parse the name...
-        p += 2;
+        unsigned short nameOffset = 0;
+        memcpy(&nameOffset, p, sizeof(nameOffset));
+        p += sizeof(nameOffset);
+        nameOffset = SWAP16(nameOffset) & ~0xC000;
+
+        const char * answerName = data + nameOffset;
+
+        printf("answerName = %s\n", answerName);
 
         //Malloc the name
-        answer.SetRawName(std::string());
-        answer.EncodeName();
+        // answer.SetRawName("CONSTRUCTOR");
+        // answer.EncodeName();
 
         //Copy the type
         unsigned short aType;
@@ -290,16 +310,20 @@ DNSPacket::DNSPacket(const char * data, const size_t length) {
 
         if((aType == TYPE_A) && (aRdlength < 4)) {
             //EXCEPTION! Should always be 4 for an answer of type A (IPv4...)
-            answer.SetRecordData(std::string());
             std::cout << "Error: Length less than 4" << std::endl;
+        } else if(aType == TYPE_CNAME) {
+            answer.SetRecordData("CNAME");
+            std::cout << "CNAME Record..." << std::endl;
         } else {
             //Copy the record data
+            std::cout << "Data length = " << aRdlength << std::endl;
             unsigned char * rdata = (unsigned char *)malloc(aRdlength);
             memcpy(rdata, p, aRdlength);
             p += aRdlength;
             char str[32];
 
-            sprintf(str, "%u.%u.%u.%u", static_cast<unsigned>(rdata[0]), static_cast<unsigned>(rdata[1]), static_cast<unsigned>(rdata[2]), static_cast<unsigned>(rdata[3]));
+            sprintf(str, "%u.%u.%u.%u", static_cast<unsigned>(rdata[0]), static_cast<unsigned>(rdata[1]), \
+                static_cast<unsigned>(rdata[2]), static_cast<unsigned>(rdata[3]));
 
             answer.SetRecordData(std::string(str));
         }
