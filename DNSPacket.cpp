@@ -74,13 +74,8 @@ char * Record::GetData(void) {
     memcpy(p, this->name, strlen(this->name) + 1);
     p += strlen(this->name) + 1;
 
-#if defined (__APPLE__)
-    short recordType = _OSSwapInt16(this->recordType);
-    short recordClass = _OSSwapInt16(this->recordClass);
-#else
-    short recordType = __bswap_16(this->recordType);
-    short recordClass = __bswap_16(this->recordClass);
-#endif
+    short recordType = SWAP16(this->recordType);
+    short recordClass = SWAP16(this->recordClass);
 
     memcpy(p, &(recordType), sizeof(this->recordType));
     p += sizeof(this->recordType);
@@ -122,17 +117,10 @@ char * ExtendedRecord::GetData(void) {
     memcpy(p, this->name, strlen(this->name) + 1);
     p += strlen(this->name) + 1;
 
-#if defined (__APPLE__)
-    short recordType = _OSSwapInt16(this->recordType);
-    short recordClass = _OSSwapInt16(this->recordClass);
-    long ttl = _OSSwapInt16(this->ttl);
-    short rdlength = _OSSwapInt16(this->rdlength);
-#else
-    short recordType = __bswap_16(this->recordType);
-    short recordClass = __bswap_16(this->recordClass);
-    long ttl = __bswap_16(this->ttl);
-    short rdlength = __bswap_16(this->rdlength);
-#endif
+    short recordType = SWAP16(this->recordType);
+    short recordClass = SWAP16(this->recordClass);
+    long ttl = SWAP16(this->ttl);
+    short rdlength = SWAP16(this->rdlength);
 
     memcpy(p, &(recordType), sizeof(this->recordType));
     p += sizeof(this->recordType);
@@ -222,37 +210,37 @@ DNSPacket::DNSPacket(const char * data, const size_t length) {
 
     memcpy(&(this->id), p, sizeof(this->id));
     p += sizeof(this->id);
-    this->id = _OSSwapInt16(this->id);
+    this->id = SWAP16(this->id);
 
     std::cerr << "this->id = " << this->id << std::endl;
 
     memcpy(&(this->flags), p, sizeof(this->flags));
     p += sizeof(this->flags);
-    this->flags = _OSSwapInt16(this->flags);
+    this->flags = SWAP16(this->flags);
 
     std::cerr << "this->flags = " << (unsigned short)this->flags << std::endl;
 
     memcpy(&(this->qdcount), p, sizeof(this->qdcount));
     p += sizeof(this->qdcount);
-    this->qdcount = _OSSwapInt16(this->qdcount);
+    this->qdcount = SWAP16(this->qdcount);
 
     std::cerr << "this->qdcount = " << (unsigned short)this->qdcount << std::endl;
 
     memcpy(&(this->ancount), p, sizeof(this->ancount));
     p += sizeof(this->ancount);
-    this->ancount = _OSSwapInt16(this->ancount);
+    this->ancount = SWAP16(this->ancount);
 
     std::cerr << "this->ancount = " << (unsigned short)this->ancount << std::endl;
 
     memcpy(&(this->nscount), p, sizeof(this->nscount));
     p += sizeof(this->nscount);
-    this->nscount = _OSSwapInt16(this->nscount);
+    this->nscount = SWAP16(this->nscount);
 
     std::cerr << "this->nscount = " << (unsigned short)this->nscount << std::endl;
 
     memcpy(&(this->arcount), p, sizeof(this->arcount));
     p += sizeof(this->arcount);
-    this->arcount = _OSSwapInt16(this->arcount);
+    this->arcount = SWAP16(this->arcount);
 
     std::cerr << "this->arcount = " << (unsigned short)this->arcount << std::endl;
 
@@ -270,12 +258,12 @@ DNSPacket::DNSPacket(const char * data, const size_t length) {
 
     memcpy(&recordType, p, sizeof(recordType));
     p += sizeof(recordType);
-    recordType = _OSSwapInt16(recordType);
+    recordType = SWAP16(recordType);
     question.SetType(recordType);
 
     memcpy(&recordClass, p, sizeof(recordClass));
     p += sizeof(recordClass);
-    recordClass = _OSSwapInt16(recordClass);
+    recordClass = SWAP16(recordClass);
     question.SetClass(recordClass);
 
     //Add the question record
@@ -297,28 +285,28 @@ DNSPacket::DNSPacket(const char * data, const size_t length) {
         short aType;
         memcpy(&aType, p, sizeof(short));
         p += sizeof(short);
-        aType = _OSSwapInt16(aType);
+        aType = SWAP16(aType);
         answer.SetType(aType);
 
         //Copy the class
         short aClass;
         memcpy(&aClass, p, sizeof(aClass));
         p += sizeof(aClass);
-        aClass = _OSSwapInt16(aClass);
+        aClass = SWAP16(aClass);
         answer.SetClass(aClass);
 
         //Copy the time to live
         long aTTL;
         memcpy(&aTTL, p, sizeof(aTTL));
         p += sizeof(aTTL);
-        aTTL = _OSSwapInt16(aTTL);
+        aTTL = SWAP16(aTTL);
         answer.SetTTL(aTTL);
 
         //Copy the data length
         short aRdlength;
         memcpy(&aRdlength, p, sizeof(aRdlength));
         p += sizeof(aRdlength);
-        aRdlength = _OSSwapInt16(aRdlength);
+        aRdlength = SWAP16(aRdlength);
         answer.SetRecordDataLength(aRdlength);
 
         if((aType == TYPE_A) && (aRdlength < 4)) {
@@ -413,21 +401,12 @@ char * DNSPacket::GetData(void) {
     data = (char *)malloc(dataLen);
     char * p = data;
 
-#if defined (__APPLE__)
-    short id = _OSSwapInt16(this->id);
-    short flags = _OSSwapInt16(this->flags);
-    short qdcount = _OSSwapInt16(this->qdcount);
-    short ancount = _OSSwapInt16(this->ancount);
-    short nscount = _OSSwapInt16(this->nscount);
-    short arcount = _OSSwapInt16(this->arcount);
-#else
-    short id = __bswap_16(this->id);
-    short flags = __bswap_16(this->flags);
-    short qdcount = __bswap_16(this->qdcount);
-    short ancount = __bswap_16(this->ancount);
-    short nscount = __bswap_16(this->nscount);
-    short arcount = __bswap_16(this->arcount);
-#endif
+    short id = SWAP16(this->id);
+    short flags = SWAP16(this->flags);
+    short qdcount = SWAP16(this->qdcount);
+    short ancount = SWAP16(this->ancount);
+    short nscount = SWAP16(this->nscount);
+    short arcount = SWAP16(this->arcount);
 
     memcpy(p, &(id), sizeof(this->id));
     p += sizeof(this->id);
