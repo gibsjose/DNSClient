@@ -50,12 +50,12 @@ public:
     std::string & GetRawName(void) { return rawName; }
     std::string & GetDisplayName(void) { return displayName; }
     char * GetName(void) { return name; }
-    short GetType(void) { return recordType; }
-    short GetClass(void) { return recordClass; }
+    unsigned short GetType(void) { return recordType; }
+    unsigned short GetClass(void) { return recordClass; }
 
     void SetRawName(const std::string & rawName) { this->rawName = rawName; }
-    void SetType(const short recordType) { this->recordType = recordType; }
-    void SetClass(const short recordClass) { this->recordClass = recordClass; }
+    void SetType(const unsigned short recordType) { this->recordType = recordType; }
+    void SetClass(const unsigned short recordClass) { this->recordClass = recordClass; }
 
     void EncodeName(void);
     void EncodeName(const std::string &);
@@ -72,8 +72,8 @@ protected:
     char * name;                //(00000011)www(00000110)google(00000011)com(00000000)
     std::string displayName;    //3www6google3com0
     std::string rawName;        //www.google.com
-    short recordType;           //TYPE_A (IPv4)
-    short recordClass;          //CLASS_IN (Internet)
+    unsigned short recordType;           //TYPE_A (IPv4)
+    unsigned short recordClass;          //CLASS_IN (Internet)
     char * data;                //Serialized byte data
 };
 
@@ -85,12 +85,12 @@ public:
         rdata.clear();
     }
 
-    long GetTTL(void) { return ttl; }
-    short GetRecordDataLength(void) { return rdlength; }
+    uint32_t GetTTL(void) { return ttl; }
+    unsigned short GetRecordDataLength(void) { return rdlength; }
     std::string & GetRecordData(void) { return rdata; }
 
-    void SetTTL(const long ttl) { this->ttl = ttl; }
-    void SetRecordDataLength(const short rdlength) { this->rdlength = rdlength; }
+    void SetTTL(const uint32_t ttl) { this->ttl = ttl; }
+    void SetRecordDataLength(const unsigned short rdlength) { this->rdlength = rdlength; }
     void SetRecordData(const std::string & rdata) { this->rdata = rdata; }
 
     void Print(void);
@@ -100,8 +100,8 @@ public:
     char * GetData(void);
 
 protected:
-    long ttl;
-    short rdlength;
+    uint32_t ttl;
+    unsigned short rdlength;
     std::string rdata;
 };
 
@@ -127,24 +127,24 @@ public:
     size_t Size(void);                          //Size of the packet in bytes
 
     //Getters...
-    short GetID(void) { return id; }
-    short GetFlags(void) { return flags; }
-    short GetQuestionCount(void) { return qdcount; }
-    short GetAnswerCount(void) { return ancount; }
-    short GetNameServerCount(void) { return nscount; }
-    short GetAdditionalRecordCount(void) { return arcount; }
+    unsigned short GetID(void) { return id; }
+    unsigned short GetFlags(void) { return flags; }
+    unsigned short GetQuestionCount(void) { return qdcount; }
+    unsigned short GetAnswerCount(void) { return ancount; }
+    unsigned short GetNameServerCount(void) { return nscount; }
+    unsigned short GetAdditionalRecordCount(void) { return arcount; }
     std::vector<QuestionRecord> & GetQuestionSection(void) { return questions; }
     std::vector<AnswerRecord> & GetAnswerSection(void) { return answers; }
     std::vector<NameServerRecord> & GetNameServerSection(void) { return nameServers; }
     std::vector<AdditionalRecord> & GetAdditionalSection(void) { return additionals; }
 
 private:
-    short id;
-    short flags;
-    short qdcount;
-    short ancount;
-    short nscount;
-    short arcount;
+    unsigned short id;
+    unsigned short flags;
+    unsigned short qdcount;
+    unsigned short ancount;
+    unsigned short nscount;
+    unsigned short arcount;
     std::vector<QuestionRecord> questions;
     std::vector<AnswerRecord> answers;
     std::vector<NameServerRecord> nameServers;

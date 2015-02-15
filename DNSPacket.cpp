@@ -74,8 +74,8 @@ char * Record::GetData(void) {
     memcpy(p, this->name, strlen(this->name) + 1);
     p += strlen(this->name) + 1;
 
-    short recordType = SWAP16(this->recordType);
-    short recordClass = SWAP16(this->recordClass);
+    unsigned short recordType = SWAP16(this->recordType);
+    unsigned short recordClass = SWAP16(this->recordClass);
 
     memcpy(p, &(recordType), sizeof(this->recordType));
     p += sizeof(this->recordType);
@@ -117,10 +117,10 @@ char * ExtendedRecord::GetData(void) {
     memcpy(p, this->name, strlen(this->name) + 1);
     p += strlen(this->name) + 1;
 
-    short recordType = SWAP16(this->recordType);
-    short recordClass = SWAP16(this->recordClass);
-    long ttl = SWAP16(this->ttl);
-    short rdlength = SWAP16(this->rdlength);
+    unsigned short recordType = SWAP16(this->recordType);
+    unsigned short recordClass = SWAP16(this->recordClass);
+    uint32_t ttl = SWAP16(this->ttl);
+    unsigned short rdlength = SWAP16(this->rdlength);
 
     memcpy(p, &(recordType), sizeof(this->recordType));
     p += sizeof(this->recordType);
@@ -143,7 +143,7 @@ DNSPacket::DNSPacket(const std::string & name) {
     srand(time(NULL));
 
     //Create a random ID
-    id = (short)rand();
+    id = (unsigned short)rand();
 
     //Set the flags (enable RD)
     flags = RD_FLAG;
@@ -218,7 +218,7 @@ DNSPacket::DNSPacket(const char * data, const size_t length) {
     p += sizeof(this->flags);
     this->flags = SWAP16(this->flags);
 
-    std::cerr << "this->flags = " << (unsigned short)this->flags << std::endl;
+    std::cerr << "this->flags = " << this->flags << std::endl;
 
     memcpy(&(this->qdcount), p, sizeof(this->qdcount));
     p += sizeof(this->qdcount);
@@ -282,29 +282,30 @@ DNSPacket::DNSPacket(const char * data, const size_t length) {
         answer.EncodeName();
 
         //Copy the type
-        short aType;
+        unsigned short aType;
         memcpy(&aType, p, sizeof(short));
         p += sizeof(short);
         aType = SWAP16(aType);
         answer.SetType(aType);
 
         //Copy the class
-        short aClass;
+        unsigned short aClass;
         memcpy(&aClass, p, sizeof(aClass));
         p += sizeof(aClass);
         aClass = SWAP16(aClass);
         answer.SetClass(aClass);
 
         //Copy the time to live
-        long aTTL;
+        uint32_t aTTL;
         memcpy(&aTTL, p, sizeof(aTTL));
         p += sizeof(aTTL);
-        aTTL = SWAP16(aTTL);
+        aTTL = SWAP32(aTTL);
         answer.SetTTL(aTTL);
 
         //Copy the data length
-        short aRdlength;
+        unsigned short aRdlength;
         memcpy(&aRdlength, p, sizeof(aRdlength));
+
         p += sizeof(aRdlength);
         aRdlength = SWAP16(aRdlength);
         answer.SetRecordDataLength(aRdlength);
@@ -312,18 +313,22 @@ DNSPacket::DNSPacket(const char * data, const size_t length) {
         if((aType == TYPE_A) && (aRdlength < 4)) {
             //EXCEPTION! Should always be 4 for an answer of type A (IPv4...)
             answer.SetRecordData(std::string());
+            std::cout << "Error: Length less than 4" << std::endl;
         } else {
             //Copy the record data
-
-            std::cerr << "aRdlength = " << aRdlength << std::endl;
-
-            char * rdata = (char *)malloc(aRdlength);
+            unsigned char * rdata = (unsigned char *)malloc(aRdlength);
             memcpy(rdata, p, aRdlength);
             p += aRdlength;
+            char str[32];
 
-            std::ostringstream oss;
-            oss << rdata[0] << "." << rdata[1] << "." << rdata[2] << "." << rdata[3];
-            answer.SetRecordData(oss.str());
+            for(int j = 0; j < 4; j++) {
+                std::bitset<8> x(rdata[j]);
+                std::cout << "rdata[" << j << "]" << static_cast<unsigned>(rdata[j]) << " (" << x << ")" << std::endl;
+            }
+
+            sprintf(str, "%u.%u.%u.%u", static_cast<unsigned>(rdata[0]), static_cast<unsigned>(rdata[1]), static_cast<unsigned>(rdata[2]), static_cast<unsigned>(rdata[3]));
+
+            answer.SetRecordData(std::string(str));
         }
 
         this->answers.push_back(answer);
@@ -401,12 +406,12 @@ char * DNSPacket::GetData(void) {
     data = (char *)malloc(dataLen);
     char * p = data;
 
-    short id = SWAP16(this->id);
-    short flags = SWAP16(this->flags);
-    short qdcount = SWAP16(this->qdcount);
-    short ancount = SWAP16(this->ancount);
-    short nscount = SWAP16(this->nscount);
-    short arcount = SWAP16(this->arcount);
+    unsigned short id = SWAP16(this->id);
+    unsigned short flags = SWAP16(this->flags);
+    unsigned short qdcount = SWAP16(this->qdcount);
+    unsigned short ancount = SWAP16(this->ancount);
+    unsigned short nscount = SWAP16(this->nscount);
+    unsigned short arcount = SWAP16(this->arcount);
 
     memcpy(p, &(id), sizeof(this->id));
     p += sizeof(this->id);
