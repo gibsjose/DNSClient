@@ -264,54 +264,54 @@ DNSPacket::DNSPacket(const char * data, const size_t length) {
         answer.DecodeName(answerName);
 
         //Copy the type
-        unsigned short aType;
-        memcpy(&aType, p, sizeof(short));
+        unsigned short answerType;
+        memcpy(&answerType, p, sizeof(short));
         p += sizeof(short);
-        aType = SWAP16(aType);
-        answer.SetType(aType);
+        answerType = SWAP16(answerType);
+        answer.SetType(answerType);
 
         //Copy the class
-        unsigned short aClass;
-        memcpy(&aClass, p, sizeof(aClass));
-        p += sizeof(aClass);
-        aClass = SWAP16(aClass);
-        answer.SetClass(aClass);
+        unsigned short answerClass;
+        memcpy(&answerClass, p, sizeof(answerClass));
+        p += sizeof(answerClass);
+        answerClass = SWAP16(answerClass);
+        answer.SetClass(answerClass);
 
         //Copy the time to live
-        uint32_t aTTL;
-        memcpy(&aTTL, p, sizeof(aTTL));
-        p += sizeof(aTTL);
-        aTTL = SWAP32(aTTL);
-        answer.SetTTL(aTTL);
+        uint32_t answerTTL;
+        memcpy(&answerTTL, p, sizeof(answerTTL));
+        p += sizeof(answerTTL);
+        answerTTL = SWAP32(answerTTL);
+        answer.SetTTL(answerTTL);
 
         //Copy the data length
-        unsigned short aRdlength;
-        memcpy(&aRdlength, p, sizeof(aRdlength));
+        unsigned short answer_rdlength;
+        memcpy(&answer_rdlength, p, sizeof(answer_rdlength));
 
-        p += sizeof(aRdlength);
-        aRdlength = SWAP16(aRdlength);
-        answer.SetRecordDataLength(aRdlength);
+        p += sizeof(answer_rdlength);
+        answer_rdlength = SWAP16(answer_rdlength);
+        answer.SetRecordDataLength(answer_rdlength);
 
         //CNAME Record
-        if(aType == TYPE_CNAME) {
-            char * rdata = (char *)calloc(aRdlength, sizeof(char));
-            memcpy(rdata, p, aRdlength);
+        if(answerType == TYPE_CNAME) {
+            char * rdata = (char *)calloc(answer_rdlength, sizeof(char));
+            memcpy(rdata, p, answer_rdlength);
             answer.SetRecordData(std::string(rdata));
             free(rdata);
         }
 
         //A Record
-        else if(aType == TYPE_A) {
+        else if(answerType == TYPE_A) {
 
             //Make sure length is 4 for A records
-            if(aRdlength != 4) {
+            if(answer_rdlength != 4) {
                 //EXCEPTION! Should always be 4 for an answer of type A (IPv4...)
                 std::cout << "Error: Type A Records should always have a length of 4" << std::endl;
             }
             else {
                 //Copy the record data
-                unsigned char * rdata = (unsigned char *)calloc(aRdlength, sizeof(char));
-                memcpy(rdata, p, aRdlength);
+                unsigned char * rdata = (unsigned char *)calloc(answer_rdlength, sizeof(char));
+                memcpy(rdata, p, answer_rdlength);
                 char str[32];
 
                 sprintf(str, "%u.%u.%u.%u", static_cast<unsigned>(rdata[0]), static_cast<unsigned>(rdata[1]), \
@@ -322,9 +322,117 @@ DNSPacket::DNSPacket(const char * data, const size_t length) {
             }
         }
 
-        p += aRdlength;
+        p += answer_rdlength;
 
         this->answers.push_back(answer);
+    }
+
+    //Parse the name server section
+    for(int i = 0; i < this->nscount; i++) {
+        NameServerRecord nameServer;
+
+        //Two bytes for the name pointer (should be 0xC___)
+        unsigned short nameOffset = 0;
+        memcpy(&nameOffset, p, sizeof(nameOffset));
+        p += sizeof(nameOffset);
+        nameOffset = SWAP16(nameOffset) & ~0xC000;
+
+        const char * nameServerName = data + nameOffset;
+
+        //Decode the name
+        nameServer.DecodeName(nameServerName);
+
+        //Copy the type
+        unsigned short nameServerType;
+        memcpy(&nameServerType, p, sizeof(short));
+        p += sizeof(short);
+        nameServerType = SWAP16(nameServerType);
+        nameServer.SetType(nameServerType);
+
+        //Copy the class
+        unsigned short nameServerClass;
+        memcpy(&nameServerClass, p, sizeof(nameServerClass));
+        p += sizeof(nameServerClass);
+        nameServerClass = SWAP16(nameServerClass);
+        nameServer.SetClass(nameServerClass);
+
+        //Copy the time to live
+        uint32_t nameServerTTL;
+        memcpy(&nameServerTTL, p, sizeof(nameServerTTL));
+        p += sizeof(nameServerTTL);
+        nameServerTTL = SWAP32(nameServerTTL);
+        nameServer.SetTTL(nameServerTTL);
+
+        //Copy the data length
+        unsigned short nameServer_rdlength;
+        memcpy(&nameServer_rdlength, p, sizeof(nameServer_rdlength));
+
+        p += sizeof(nameServer_rdlength);
+        nameServer_rdlength = SWAP16(nameServer_rdlength);
+        nameServer.SetRecordDataLength(nameServer_rdlength);
+
+        char * rdata = (char *)calloc(nameServer_rdlength, sizeof(char));
+        memcpy(rdata, p, nameServer_rdlength);
+        nameServer.SetRecordData(std::string(rdata));
+        free(rdata);
+
+        p += nameServer_rdlength;
+
+        this->nameServers.push_back(nameServer);
+    }
+
+    //Parse the name server section
+    for(int i = 0; i < this->arcount; i++) {
+        AdditionalRecord additional;
+
+        //Two bytes for the name pointer (should be 0xC___)
+        unsigned short nameOffset = 0;
+        memcpy(&nameOffset, p, sizeof(nameOffset));
+        p += sizeof(nameOffset);
+        nameOffset = SWAP16(nameOffset) & ~0xC000;
+
+        const char * additionalName = data + nameOffset;
+
+        //Decode the name
+        additional.DecodeName(additionalName);
+
+        //Copy the type
+        unsigned short additionalType;
+        memcpy(&additionalType, p, sizeof(short));
+        p += sizeof(short);
+        additionalType = SWAP16(additionalType);
+        additional.SetType(additionalType);
+
+        //Copy the class
+        unsigned short additionalClass;
+        memcpy(&additionalClass, p, sizeof(additionalClass));
+        p += sizeof(additionalClass);
+        additionalClass = SWAP16(additionalClass);
+        additional.SetClass(additionalClass);
+
+        //Copy the time to live
+        uint32_t additionalTTL;
+        memcpy(&additionalTTL, p, sizeof(additionalTTL));
+        p += sizeof(additionalTTL);
+        additionalTTL = SWAP32(additionalTTL);
+        additional.SetTTL(additionalTTL);
+
+        //Copy the data length
+        unsigned short additional_rdlength;
+        memcpy(&additional_rdlength, p, sizeof(additional_rdlength));
+
+        p += sizeof(additional_rdlength);
+        additional_rdlength = SWAP16(additional_rdlength);
+        additional.SetRecordDataLength(additional_rdlength);
+
+        char * rdata = (char *)calloc(additional_rdlength, sizeof(char));
+        memcpy(rdata, p, additional_rdlength);
+        additional.SetRecordData(std::string(rdata));
+        free(rdata);
+
+        p += additional_rdlength;
+
+        this->additionals.push_back(additional);
     }
 }
 
