@@ -38,8 +38,8 @@ int main(int argc, char * argv[]) {
     }
 
     std::cout << "Resolver info:" << std::endl;
-    std::cout << "IP: " << lConfigManager.getResolverIPString() << std::endl;
-    std::cout << "Port: " << lConfigManager.getResolverPort() << std::endl;
+    std::cout << " --> IP: " << lConfigManager.getResolverIPString() << std::endl;
+    std::cout << " --> Port: " << lConfigManager.getResolverPort() << std::endl;
 
 
     //Create a socket:
@@ -91,7 +91,7 @@ int main(int argc, char * argv[]) {
     FD_SET(sockfd, &sockets);
     //FD_SET(STDIN_FILENO, &sockets);
 
-    std::cout << "DNS Client" << std::endl;
+    std::cout << std::endl;
 
     char * response = (char*)malloc(MAX_INPUT_SIZE);
 

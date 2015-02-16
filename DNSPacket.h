@@ -63,6 +63,9 @@ public:
 
     void DecodeName(const char *);
 
+    std::string DecodeType(const unsigned short);
+    std::string DecodeClass(const unsigned short);
+
     void Print(void);
 
     size_t Size(void);
@@ -70,12 +73,12 @@ public:
     char * GetData(void);
 
 protected:
-    char * name;                //(00000011)www(00000110)google(00000011)com(00000000)
-    std::string displayName;    //3www6google3com0
-    std::string rawName;        //www.google.com
-    unsigned short recordType;           //TYPE_A (IPv4)
-    unsigned short recordClass;          //CLASS_IN (Internet)
-    char * data;                //Serialized byte data
+    char * name;                    //(00000011)www(00000110)google(00000011)com(00000000)
+    std::string displayName;        //3www6google3com0
+    std::string rawName;            //www.google.com
+    unsigned short recordType;      //TYPE_A (IPv4) or TYPE_CNAME (Cannonical Name)
+    unsigned short recordClass;     //CLASS_IN (Internet)
+    char * data;                    //Serialized byte data
 };
 
 class ExtendedRecord : public Record {

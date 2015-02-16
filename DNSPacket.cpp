@@ -62,11 +62,29 @@ void Record::DecodeName(const char * name) {
     free(tmp);
 }
 
+std::string Record::DecodeType(const unsigned short recordType) {
+    if(recordType == TYPE_A) {
+        return "A";
+    } else if(recordType == TYPE_CNAME) {
+        return "CNAME";
+    } else {
+        return std::to_string(recordType);
+    }
+}
+
+std::string Record::DecodeClass(const unsigned short recordClass) {
+    if(recordClass == CLASS_IN) {
+        return "Internet (IN)";
+    } else {
+        return std::to_string(recordClass);
+    }
+}
+
 void Record::Print(void) {
     std::cout << "\t\tRaw Name --> " << rawName << std::endl;
     std::cout << "\t\tEncoded Name --> " << displayName << std::endl;
-    std::cout << "\t\tType --> " << recordType << std::endl;
-    std::cout << "\t\tClass --> " << recordClass << std::endl;
+    std::cout << "\t\tType --> " << DecodeType(recordType) << std::endl;
+    std::cout << "\t\tClass --> " << DecodeClass(recordClass) << std::endl;
 }
 
 size_t Record::Size(void) {
@@ -102,8 +120,8 @@ char * Record::GetData(void) {
 void ExtendedRecord::Print(void) {
     std::cout << "\t\tRaw Name --> " << rawName << std::endl;
     std::cout << "\t\tEncoded Name --> " << displayName << std::endl;
-    std::cout << "\t\tType --> " << recordType << std::endl;
-    std::cout << "\t\tClass --> " << recordClass << std::endl;
+    std::cout << "\t\tType --> " << DecodeType(recordType) << std::endl;
+    std::cout << "\t\tClass --> " << DecodeClass(recordClass) << std::endl;
     std::cout << "\t\tTTL --> " << ttl << std::endl;
     std::cout << "\t\tRecord Data Length --> " << rdlength << std::endl;
     std::cout << "\t\tRecord Data --> " << rdata << std::endl;
