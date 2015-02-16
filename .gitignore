@@ -9,3 +9,6 @@ DNSClient
 
 #Object files
 *.o
+
+#Ignore clang scan-build output
+scan

@@ -97,6 +97,7 @@ int main(int argc, char * argv[]) {
 
     std::string domain;
     while(1) {
+        memset(response, 0, MAX_INPUT_SIZE);
         domain.clear();
         //Get domain from user
         std::cout << "Enter a domain name: ";
@@ -132,6 +133,7 @@ int main(int argc, char * argv[]) {
     }
 
     //Close
+    free(response);
 }
 
 //Trim the first newline character from the string
