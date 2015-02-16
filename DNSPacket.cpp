@@ -336,7 +336,8 @@ DNSPacket::DNSPacket(const char * data, const size_t length) {
 void DNSPacket::Print(void) {
     std::cout << "DNS Packet:" << std::endl;
     std::cout << "\tID --> " << id << std::endl;
-    std::cout << "\tFlags --> " << flags << std::endl;
+    std::bitset<16> flagbits(flags);
+    std::cout << "\tFlags --> " << flagbits << std::endl;
     std::cout << "\tQuestion Count --> " << qdcount << std::endl;
     std::cout << "\tAnswer Count --> " << ancount << std::endl;
     std::cout << "\tName Server Count --> " << nscount << std::endl;
