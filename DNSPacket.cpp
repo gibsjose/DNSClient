@@ -182,19 +182,6 @@ DNSPacket::DNSPacket(const std::string & name) {
 
     //Add the question
     questions.push_back(question);
-
-    //Encode the names for the empty sections as well in order to malloc 'name'
-    // AnswerRecord answer;
-    // answer.EncodeName();
-    // answers.push_back(answer);
-    //
-    // NameServerRecord nameServer;
-    // nameServer.EncodeName();
-    // nameServers.push_back(nameServer);
-    //
-    // AdditionalRecord additionalRecord;
-    // additionalRecord.EncodeName();
-    // additionals.push_back(additionalRecord);
 }
 
 DNSPacket::DNSPacket(const char * data, const size_t length) {
@@ -265,8 +252,7 @@ DNSPacket::DNSPacket(const char * data, const size_t length) {
     for(int i = 0; i < this->ancount; i++) {
         AnswerRecord answer;
 
-        //Skip 2 bytes for the name (should be 0xC00C)
-        //Parse the name...
+        //Two bytes for the name pointer (should be 0xC___)
         unsigned short nameOffset = 0;
         memcpy(&nameOffset, p, sizeof(nameOffset));
         p += sizeof(nameOffset);
@@ -274,11 +260,8 @@ DNSPacket::DNSPacket(const char * data, const size_t length) {
 
         const char * answerName = data + nameOffset;
 
-        printf("answerName = %s\n", answerName);
-
-        //Malloc the name
-        // answer.SetRawName("CONSTRUCTOR");
-        // answer.EncodeName();
+        //Decode the name
+        answer.DecodeName(answerName);
 
         //Copy the type
         unsigned short aType;
@@ -309,25 +292,37 @@ DNSPacket::DNSPacket(const char * data, const size_t length) {
         aRdlength = SWAP16(aRdlength);
         answer.SetRecordDataLength(aRdlength);
 
-        if((aType == TYPE_A) && (aRdlength < 4)) {
-            //EXCEPTION! Should always be 4 for an answer of type A (IPv4...)
-            std::cout << "Error: Length less than 4" << std::endl;
-        } else if(aType == TYPE_CNAME) {
-            answer.SetRecordData("CNAME");
-            std::cout << "CNAME Record..." << std::endl;
-        } else {
-            //Copy the record data
-            std::cout << "Data length = " << aRdlength << std::endl;
-            unsigned char * rdata = (unsigned char *)malloc(aRdlength);
+        //CNAME Record
+        if(aType == TYPE_CNAME) {
+            char * rdata = (char *)calloc(aRdlength, sizeof(char));
             memcpy(rdata, p, aRdlength);
-            p += aRdlength;
-            char str[32];
-
-            sprintf(str, "%u.%u.%u.%u", static_cast<unsigned>(rdata[0]), static_cast<unsigned>(rdata[1]), \
-                static_cast<unsigned>(rdata[2]), static_cast<unsigned>(rdata[3]));
-
-            answer.SetRecordData(std::string(str));
+            answer.SetRecordData(std::string(rdata));
+            free(rdata);
         }
+
+        //A Record
+        else if(aType == TYPE_A) {
+
+            //Make sure length is 4 for A records
+            if(aRdlength != 4) {
+                //EXCEPTION! Should always be 4 for an answer of type A (IPv4...)
+                std::cout << "Error: Type A Records should always have a length of 4" << std::endl;
+            }
+            else {
+                //Copy the record data
+                unsigned char * rdata = (unsigned char *)calloc(aRdlength, sizeof(char));
+                memcpy(rdata, p, aRdlength);
+                char str[32];
+
+                sprintf(str, "%u.%u.%u.%u", static_cast<unsigned>(rdata[0]), static_cast<unsigned>(rdata[1]), \
+                    static_cast<unsigned>(rdata[2]), static_cast<unsigned>(rdata[3]));
+
+                answer.SetRecordData(std::string(str));
+                free(rdata);
+            }
+        }
+
+        p += aRdlength;
 
         this->answers.push_back(answer);
     }
@@ -335,36 +330,68 @@ DNSPacket::DNSPacket(const char * data, const size_t length) {
 
 void DNSPacket::Print(void) {
     std::cout << "DNS Packet:" << std::endl;
+    std::cout << "<----------------------------------------------------------------------->" << std::endl;
+    std::cout << "\tHeaders" << std::endl;
+    std::cout << "\t-------" << std::endl;
     std::cout << "\tID --> " << id << std::endl;
-    std::cout << "\tFlags --> " << flags << std::endl;
+    std::cout << "\tFlags --> 0b" << std::bitset<16>(flags) << std::endl;
     std::cout << "\tQuestion Count --> " << qdcount << std::endl;
     std::cout << "\tAnswer Count --> " << ancount << std::endl;
     std::cout << "\tName Server Count --> " << nscount << std::endl;
     std::cout << "\tAdditional Record Count --> " << arcount << std::endl;
+    std::cout << std::endl;
 
-    std::cout << "\tQuestion Section" << std::endl;
-    for(int i = 0; i < questions.size(); i++) {
-        std::cout << "\tQuestion " << i << std::endl;
-        questions.at(i).Print();
+    if(qdcount) {
+        std::cout << "\tQuestion Section" << std::endl;
+        std::cout << "\t----------------" << std::endl;
+        for(int i = 0; i < questions.size(); i++) {
+            std::cout << "\tQuestion #" << i + 1 << std::endl;
+            questions.at(i).Print();
+        }
+    } else {
+        std::cout << "\t[No Questions]" << std::endl;
     }
 
-    std::cout << "\tAnswer Section" << std::endl;
-    for(int i = 0; i < answers.size(); i++) {
-        std::cout << "\tAnswer " << i << std::endl;
-        answers.at(i).Print();
+    std::cout << std::endl;
+
+    if(ancount) {
+        std::cout << "\tAnswer Section" << std::endl;
+        std::cout << "\t--------------" << std::endl;
+        for(int i = 0; i < answers.size(); i++) {
+            std::cout << "\tAnswer #" << i + 1<< std::endl;
+            answers.at(i).Print();
+        }
+    } else {
+        std::cout << "\t[No Answers]" << std::endl;
     }
 
-    std::cout << "\tName Server Section" << std::endl;
-    for(int i = 0; i < nameServers.size(); i++) {
-        std::cout << "\tName Server " << i << std::endl;
-        nameServers.at(i).Print();
+    std::cout << std::endl;
+
+    if(nscount) {
+        std::cout << "\tName Server Section" << std::endl;
+        std::cout << "\t-------------------" << std::endl;
+        for(int i = 0; i < nameServers.size(); i++) {
+            std::cout << "\tName Server #" << i + 1 << std::endl;
+            nameServers.at(i).Print();
+        }
+    } else {
+        std::cout << "\t[No Name Servers]" << std::endl;
     }
 
-    std::cout << "\tAdditional Record Section" << std::endl;
-    for(int i = 0; i < additionals.size(); i++) {
-        std::cout << "\tAdditonal Record " << i << std::endl;
-        additionals.at(i).Print();
+    std::cout << std::endl;
+
+    if(arcount) {
+        std::cout << "\tAdditional Record Section" << std::endl;
+        std::cout << "\t-------------------------" << std::endl;
+        for(int i = 0; i < additionals.size(); i++) {
+            std::cout << "\tAdditonal Record #" << i + 1<< std::endl;
+            additionals.at(i).Print();
+        }
+    } else {
+        std::cout << "\t[No Additional Records]" << std::endl;
     }
+
+    std::cout << "<----------------------------------------------------------------------->" << std::endl << std::endl;
 }
 
 size_t DNSPacket::Size(void) {
