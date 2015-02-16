@@ -43,6 +43,7 @@ void Record::DecodeName(const char * name) {
 
     const char * p = name;
     char * tmp = (char *)malloc(len - 1);
+    memset(tmp, 0, len -1);
 
     while(*p != (char)0) {
         strncat(tmp, (p + 1), *p);
