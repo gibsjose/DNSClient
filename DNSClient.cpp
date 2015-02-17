@@ -119,17 +119,18 @@ int main(int argc, char * argv[]) {
         unsigned int len = sizeof(serveraddr);
         int n = recvfrom(sockfd, response, MAX_INPUT_SIZE, 0, (struct sockaddr *)&serveraddr, &len);
 
-        if(n < 0) {
+        if(n <= 0) {
             std::cerr << "Error receiving packet: recvfrom(): " << strerror(errno) << std::endl;
-            return -1;
         }
+        else
+        {
+            //Create a packet for the response packet
+            DNSPacket responsePacket(response, n);
 
-        //Create a packet for the response packet
-        DNSPacket responsePacket(response, n);
-
-        //Print response
-        std::cout << "\nRESPONSE PACKET" << std::endl;
-        responsePacket.Print();
+            //Print response
+            std::cout << "\nRESPONSE PACKET" << std::endl;
+            responsePacket.Print();
+        }
     }
 
     //Close
