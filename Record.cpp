@@ -44,10 +44,6 @@ void Record::DecodeName(const char * data, const char ** name) {
     // Make a copy of the name pointer so that the name pointer can be left to point to the next part
     // of this packet's data right after the name's bytes even if it contained a "pointer" in the
     // name.
-    // uint32_t x;
-    // memcpy(&x, *name, sizeof(x));
-    // printf("Started with 4 bytes: %x\n", x);
-    // printf("Start was %lu bytes from start.\n", *name - data);
 
     const char * p = *name;
     char * tmp = (char *)malloc(len - 1);
@@ -67,33 +63,27 @@ void Record::DecodeName(const char * data, const char ** name) {
         {
             if(!didFollowPointer)
             {
-                unsigned char x1, x2, x3;
-                memcpy(&x1, *name - 1, sizeof(x1));
-                memcpy(&x2, *name, sizeof(x2));
-                memcpy(&x3, *name + 1, sizeof(x3));
-                printf("Name is now pointing to (-1, 0, 1) bytes: %x, %x, %x\n", x1, x2, x3);
+                // unsigned char x1, x2, x3;
+                // memcpy(&x1, *name - 1, sizeof(x1));
+                // memcpy(&x2, *name, sizeof(x2));
+                // memcpy(&x3, *name + 1, sizeof(x3));
+                // printf("Name is now pointing to (-1, 0, 1) bytes: %x, %x, %x\n", x1, x2, x3);
 
                 // Move the name pointer right after the pointer's last byte.
-                printf("Moving %lu bytes.\n", p + sizeof(potentialOffset) - *name);
                 (*name) = p + sizeof(potentialOffset);
 
-                memcpy(&x1, *name - 1, sizeof(x1));
-                memcpy(&x2, *name, sizeof(x2));
-                memcpy(&x3, *name + 1, sizeof(x3));
-                printf("Name is now pointing to (-1, 0, 1) bytes: %x, %x, %x\n", x1, x2, x3);
+                // memcpy(&x1, *name - 1, sizeof(x1));
+                // memcpy(&x2, *name, sizeof(x2));
+                // memcpy(&x3, *name + 1, sizeof(x3));
+                // printf("Name is now pointing to (-1, 0, 1) bytes: %x, %x, %x\n", x1, x2, x3);
 
 
                 // Mark that a pointer was followed.
                 didFollowPointer = 1;
             }
 
-            printf("Offset hex (uncleared): %x\n", potentialOffset);
-            printf("Offset unsigned: %u\n", potentialOffset & ~0xC000);
-
             // Clear the top two bits and set the pointer equal to the data + offset.
             p = data + (potentialOffset & ~0xC000);
-
-            printf("p is now: %s\n", p);
 
             // Get more memory.
             tmp = (char *) realloc(tmp, strlen(tmp) + /* strlen(p) */ 100);
@@ -128,7 +118,7 @@ void Record::DecodeName(const char * data, const char ** name) {
                 {
                     (*name)++;
                 }
-                
+
                 break;
             }
 
@@ -136,8 +126,6 @@ void Record::DecodeName(const char * data, const char ** name) {
             strncat(tmp, ".", 1);
         }
     }
-
-    printf("Final string: %s\n", tmp);
 
     //Encode to set display name
     this->EncodeName(std::string(tmp));
