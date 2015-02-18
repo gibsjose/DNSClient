@@ -21,6 +21,8 @@
     #define SWAP32(x) (__bswap_32(x))
 #endif
 
+#define MAX_DNS_NAME_LEN 256
+
 const short RD_FLAG = (short)(1 << 8);      //RD (Recursion desired) bit set
 const short CLASS_IN = 1;                   //IN = Internet class
 const short TYPE_A = 1;                     //A = IPv4 Addresses
@@ -62,7 +64,9 @@ public:
     void EncodeName(void);
     void EncodeName(const std::string &);
 
+    std::string DecodeString(const char *, const char **);
     void DecodeName(const char *, const char **);
+
 
     std::string DecodeType(const unsigned short);
     std::string DecodeClass(const unsigned short);

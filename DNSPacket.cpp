@@ -70,14 +70,7 @@ DNSPacket::DNSPacket(const char * data, const size_t length) {
     p += sizeof(this->arcount);
     this->arcount = SWAP16(this->arcount);
 
-    //Malloc the correct number of bytes to fit the question name
-    //  p should be terminated with a 0x00 byte as per DNS specs
-    // char * name = (char *)malloc(strlen(p) + 1);
-    // memcpy(name, p, strlen(p) + 1);
-    // p += strlen(p) + 1;
-
-    //Sets the rawName and displayName of the question
-    printf("Decoding the question name...\n");
+    //Decode the question name
     question.DecodeName(this->data, &p);
 
     short recordType;
@@ -136,10 +129,7 @@ DNSPacket::DNSPacket(const char * data, const size_t length) {
 
         //CNAME Record
         if(answerType == TYPE_CNAME) {
-            char * rdata = (char *)calloc(answer_rdlength, sizeof(char));
-            memcpy(rdata, p, answer_rdlength);
-            answer.SetRecordData(std::string(rdata));
-            free(rdata);
+            answer.SetRecordData(answer.DecodeString(this->data, &p));
         }
 
         //A Record
@@ -154,13 +144,12 @@ DNSPacket::DNSPacket(const char * data, const size_t length) {
                 //Copy the record data
                 unsigned char * rdata = (unsigned char *)calloc(answer_rdlength, sizeof(char));
                 memcpy(rdata, p, answer_rdlength);
+                p += answer_rdlength;
 
                 answer.SetRecordData(ExtendedRecord::getIPFromBytes(rdata, answer_rdlength));
                 free(rdata);
             }
         }
-
-        p += answer_rdlength;
 
         this->answers.push_back(answer);
     }
@@ -249,10 +238,7 @@ DNSPacket::DNSPacket(const char * data, const size_t length) {
 
         //CNAME Record
         if(additionalType == TYPE_CNAME) {
-            char * rdata = (char *)calloc(additional_rdlength, sizeof(char));
-            memcpy(rdata, p, additional_rdlength);
-            additional.SetRecordData(std::string(rdata));
-            free(rdata);
+            additional.SetRecordData(additional.DecodeString(this->data, &p));
         }
 
         //A Record
@@ -267,13 +253,12 @@ DNSPacket::DNSPacket(const char * data, const size_t length) {
                 //Copy the record data
                 unsigned char * rdata = (unsigned char *)calloc(additional_rdlength, sizeof(char));
                 memcpy(rdata, p, additional_rdlength);
+                p += additional_rdlength;
 
                 additional.SetRecordData(ExtendedRecord::getIPFromBytes(rdata, additional_rdlength));
                 free(rdata);
             }
         }
-
-        p += additional_rdlength;
 
         this->additionals.push_back(additional);
     }

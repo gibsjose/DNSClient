@@ -37,7 +37,7 @@ void Record::EncodeName(const std::string & rawName) {
     this->EncodeName();
 }
 
-void Record::DecodeName(const char * data, const char ** name) {
+std::string Record::DecodeString(const char * data, const char ** name) {
     //Convert between (00000011)www(00000110)google(00000011)com(00000000) and www.google.com
     unsigned int len = strlen(*name);
 
@@ -46,8 +46,8 @@ void Record::DecodeName(const char * data, const char ** name) {
     // name.
 
     const char * p = *name;
-    char * tmp = (char *)malloc(len - 1);
-    memset(tmp, 0, len -1);
+    char * tmp = (char *)malloc(MAX_DNS_NAME_LEN);
+    memset(tmp, 0, MAX_DNS_NAME_LEN);
 
     unsigned char didFollowPointer = 0;
 
@@ -63,20 +63,8 @@ void Record::DecodeName(const char * data, const char ** name) {
         {
             if(!didFollowPointer)
             {
-                // unsigned char x1, x2, x3;
-                // memcpy(&x1, *name - 1, sizeof(x1));
-                // memcpy(&x2, *name, sizeof(x2));
-                // memcpy(&x3, *name + 1, sizeof(x3));
-                // printf("Name is now pointing to (-1, 0, 1) bytes: %x, %x, %x\n", x1, x2, x3);
-
                 // Move the name pointer right after the pointer's last byte.
                 (*name) = p + sizeof(potentialOffset);
-
-                // memcpy(&x1, *name - 1, sizeof(x1));
-                // memcpy(&x2, *name, sizeof(x2));
-                // memcpy(&x3, *name + 1, sizeof(x3));
-                // printf("Name is now pointing to (-1, 0, 1) bytes: %x, %x, %x\n", x1, x2, x3);
-
 
                 // Mark that a pointer was followed.
                 didFollowPointer = 1;
@@ -85,13 +73,6 @@ void Record::DecodeName(const char * data, const char ** name) {
             // Clear the top two bits and set the pointer equal to the data + offset.
             p = data + (potentialOffset & ~0xC000);
 
-            // Get more memory.
-            tmp = (char *) realloc(tmp, strlen(tmp) + /* strlen(p) */ 100);
-
-            if(tmp == NULL)
-            {
-                printf("ERRORRRRRRR\n");
-            }
         }
         else
         {
@@ -127,11 +108,18 @@ void Record::DecodeName(const char * data, const char ** name) {
         }
     }
 
-    //Encode to set display name
-    this->EncodeName(std::string(tmp));
+    std::string returnString(tmp);
 
     //Free tmp
     free(tmp);
+
+    return returnString;
+}
+
+void Record::DecodeName(const char * data, const char ** name)
+{
+    //Encode to set display name
+    this->EncodeName(this->DecodeString(data, name));
 }
 
 std::string Record::DecodeType(const unsigned short recordType) {
