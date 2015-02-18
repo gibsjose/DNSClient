@@ -93,8 +93,6 @@ DNSPacket::DNSPacket(const char * data, const size_t length) {
     for(int i = 0; i < this->ancount; i++) {
         AnswerRecord answer;
 
-        printf("Decoding the %ith answer name...\n", i);
-
         //Decode the name
         answer.DecodeName(this->data, &p);
 
