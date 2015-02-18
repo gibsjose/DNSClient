@@ -190,12 +190,7 @@ DNSPacket::DNSPacket(const char * data, const size_t length) {
         nameServer_rdlength = SWAP16(nameServer_rdlength);
         nameServer.SetRecordDataLength(nameServer_rdlength);
 
-        char * rdata = (char *)calloc(nameServer_rdlength, sizeof(char));
-        memcpy(rdata, p, nameServer_rdlength);
-        nameServer.SetRecordData(std::string(rdata));
-        free(rdata);
-
-        p += nameServer_rdlength;
+        nameServer.SetRecordData(nameServer.DecodeString(this->data, &p));
 
         this->nameServers.push_back(nameServer);
     }
