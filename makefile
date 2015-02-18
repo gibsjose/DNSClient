@@ -11,7 +11,7 @@ BIN = DNSClient
 _DEPS =
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ = DNSClient.o DNSPacket.o ConfigManager.o
+_OBJ = DNSClient.o DNSPacket.o ConfigManager.o Record.o ExtendedRecord.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 all: setup $(BIN)
